@@ -1,0 +1,142 @@
+{
+  "galatasaray": {
+    "name": "Galatasaray",
+    "league": "super-lig",
+    "competitions": ["super-lig", "uel"],
+    "colors": ["#FFDD00", "#A90432"],
+    "initial": "GS"
+  },
+  "fenerbahce": {
+    "name": "Fenerbahçe",
+    "league": "super-lig",
+    "competitions": ["super-lig", "uel"],
+    "colors": ["#FFED00", "#00337F"],
+    "initial": "FB"
+  },
+  "besiktas": {
+    "name": "Beşiktaş",
+    "league": "super-lig",
+    "competitions": ["super-lig", "uel"],
+    "colors": ["#000000", "#FFFFFF"],
+    "initial": "BJK"
+  },
+  "trabzonspor": {
+    "name": "Trabzonspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#7B0821", "#1E376D"],
+    "initial": "TS"
+  },
+  "sivasspor": {
+    "name": "Sivasspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#E31E25", "#FFFFFF"],
+    "initial": "SVS"
+  },
+  "antalyaspor": {
+    "name": "Antalyaspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "ANT"
+  },
+  "konyaspor": {
+    "name": "Konyaspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#009639", "#FFFFFF"],
+    "initial": "KNY"
+  },
+  "alanyaspor": {
+    "name": "Alanyaspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#F18700", "#009640"],
+    "initial": "ALY"
+  },
+  "göztepe": {
+    "name": "Göztepe",
+    "league": "tff-1-lig",
+    "competitions": ["tff-1-lig"],
+    "colors": ["#FFDD00", "#CC0000"],
+    "initial": "GOZ"
+  },
+  "kayserispor": {
+    "name": "Kayserispor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#FF0000", "#FFEE00"],
+    "initial": "KYS"
+  },
+  "basaksehir": {
+    "name": "Başakşehir",
+    "league": "super-lig",
+    "competitions": ["super-lig", "uecl"],
+    "colors": ["#FF9500", "#000F59"],
+    "initial": "IBB"
+  },
+  "adana_demirspor": {
+    "name": "Adana Demirspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#0066B2", "#FFFFFF"],
+    "initial": "ADS"
+  },
+  "samsunspor": {
+    "name": "Samsunspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#E31616", "#FFFFFF"],
+    "initial": "SMS"
+  },
+  "pendikspor": {
+    "name": "Pendikspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#002F87", "#FFFFFF"],
+    "initial": "PEN"
+  },
+  "hatayspor": {
+    "name": "Hatayspor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#8A1538", "#FFFFFF"],
+    "initial": "HTS"
+  },
+  "kasimpasa": {
+    "name": "Kasımpaşa",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#004C99", "#FFFFFF"],
+    "initial": "KAS"
+  },
+  "rizespor": {
+    "name": "Çaykur Rizespor",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#00877F", "#0066B2"],
+    "initial": "RZE"
+  },
+  "bodrum_fk": {
+    "name": "Bodrum FK",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#FCCC0A", "#017940"],
+    "initial": "BDR"
+  },
+  "ankaragucu": {
+    "name": "MKE Ankaragücü",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#FFDA00", "#000066"],
+    "initial": "ANK"
+  },
+  "karagumruk": {
+    "name": "Fatih Karagümrük",
+    "league": "super-lig",
+    "competitions": ["super-lig"],
+    "colors": ["#FF0000", "#000000"],
+    "initial": "KRG"
+  }
+}

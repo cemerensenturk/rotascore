@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RotaScore by Kafeinal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="./img/favicon.png">
+</head>
+<body>
+    <div class="control-center">
+        <h1>RotaScore</h1>
+        <div class="team-selection">
+            <div class="filter-section">
+                <label for="filter-category">League:</label>
+                <select id="filter-category" onchange="filterTeams()">
+                    <option value="all">All Teams</option>
+                    <optgroup label="Leagues">
+                        <option value="premier-league">Premier League</option>
+                        <option value="la-liga">La Liga</option>
+                        <option value="bundesliga">Bundesliga</option>
+                        <option value="serie-a">Serie A</option>
+                        <option value="ligue-1">Ligue 1</option>
+                        <option value="super-lig">Trendyol Süper Lig</option>
+                        <option value="others">Other Teams</option>
+                    </optgroup>
+                    <optgroup label="Tournaments">
+                        <option value="worldcup">FIFA World Cup 2026</option>
+                        <option value="ucl">UEFA Champions League</option>
+                        <option value="uel">UEFA Europa League</option>
+                        <option value="uecl">UEFA Conference League</option>
+                    </optgroup>
+                </select>
+            </div>
+            <label for="team1">Home:
+                <select id="team1-select">
+                </select>
+            </label>
+
+            <label for="team2">Away:
+                <select id="team2-select">
+                </select>
+            </label>
+            <button class="startGame" onclick="startGame()">Start Game</button>
+            <div class="scoreboard">
+                <p>Score: <span id="score">0 - 0</span></p>
+                <p>Time: <span id="time">1</span>'</p>
+            </div>
+        </div>
+        <div id="goal-history">
+            <h3>Goal History</h3>
+        </div>        
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="sticky-icon">
+        <a href="https://cemeren.dev" class="main-website">
+            <div>cemeren.dev</div><img src="./img/as-removebg-preview.png">
+        </a>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

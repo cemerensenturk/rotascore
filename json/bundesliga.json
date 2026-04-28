@@ -1,0 +1,128 @@
+{
+  "bayern-munich": {
+    "name": "FC Bayern München",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "ucl"],
+    "colors": ["#DC052D", "#FFFFFF"],
+    "initial": "FCB"
+  },
+  "borussia-dortmund": {
+    "name": "Borussia Dortmund",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "ucl"],
+    "colors": ["#FDE100", "#000000"],
+    "initial": "BVB"
+  },
+  "rb-leipzig": {
+    "name": "RB Leipzig",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "ucl"],
+    "colors": ["#FFFFFF", "#DD0741"],
+    "initial": "RBL"
+  },
+  "bayer-leverkusen": {
+    "name": "Bayer 04 Leverkusen",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "ucl"],
+    "colors": ["#E32221", "#000000"],
+    "initial": "B04"
+  },
+  "wolfsburg": {
+    "name": "VfL Wolfsburg",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#10B869", "#FFFFFF"],
+    "initial": "WOB"
+  },
+  "borussia-monchengladbach": {
+    "name": "Borussia Mönchengladbach",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#FFFFFF", "#000000"],
+    "initial": "BMG"
+  },
+  "heidenheim": {
+    "name": "1. FC Heidenheim",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "uecl"],
+    "colors": ["#BA0C2F", "#3E5C98"],
+    "initial": "FCH"
+  },
+  "hoffenheim": {
+    "name": "TSG 1899 Hoffenheim",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "uel"],
+    "colors": ["#1C63B7", "#FFFFFF"],
+    "initial": "TSG"
+  },
+  "eintracht-frankfurt": {
+    "name": "Eintracht Frankfurt",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "uel"],
+    "colors": ["#E1000F", "#000000"],
+    "initial": "SGE"
+  },
+  "stuttgart": {
+    "name": "VfB Stuttgart",
+    "league": "bundesliga",
+    "competitions": ["bundesliga", "ucl"],
+    "colors": ["#E32219", "#FFFFFF"],
+    "initial": "VFB"
+  },
+  "freiburg": {
+    "name": "SC Freiburg",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#D01F2E", "#000000"],
+    "initial": "SCF"
+  },
+  "augsburg": {
+    "name": "FC Augsburg",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#006634", "#DC052D"],
+    "initial": "FCA"
+  },
+  "werder-bremen": {
+    "name": "SV Werder Bremen",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#1D9053", "#FFFFFF"],
+    "initial": "SVW"
+  },
+  "mainz": {
+    "name": "1. FSV Mainz 05",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#ED1C24", "#FFFFFF"],
+    "initial": "M05"
+  },
+  "union-berlin": {
+    "name": "1. FC Union Berlin",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#E1001A", "#FFFFFF"],
+    "initial": "FCU"
+  },
+  "bochum": {
+    "name": "VfL Bochum",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#005CA9", "#FFFFFF"],
+    "initial": "BOC"
+  },
+  "st-pauli": {
+    "name": "FC St. Pauli",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#A32D2F", "#FFFFFF"],
+    "initial": "STP"
+  },
+  "holstein-kiel": {
+    "name": "Holstein Kiel",
+    "league": "bundesliga",
+    "competitions": ["bundesliga"],
+    "colors": ["#0072BC", "#FFFFFF"],
+    "initial": "KIE"
+  }
+}

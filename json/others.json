@@ -1,0 +1,478 @@
+{
+  "psv": {
+    "name": "PSV Eindhoven",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "PSV"
+  },
+  "benfica": {
+    "name": "Benfica",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#E33E37", "#FFFFFF"],
+    "initial": "BEN"
+  },
+  "feyenoord": {
+    "name": "Feyenoord",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#DF0A14", "#FFFFFF"],
+    "initial": "FEY"
+  },
+  "celtic": {
+    "name": "Celtic",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#00843D", "#FFFFFF"],
+    "initial": "CEL"
+  },
+  "sporting-lizbon": {
+    "name": "Sporting CP",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#006630", "#FFFFFF"],
+    "initial": "SCP"
+  },
+  "club-brugge": {
+    "name": "Club Brugge",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#0000FF", "#000000"],
+    "initial": "CLB"
+  },
+  "dinamo-zagreb": {
+    "name": "Dinamo Zagreb",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#0C4DA2", "#FFFFFF"],
+    "initial": "DZG"
+  },
+  "shaktar-donetsk": {
+    "name": "Shakhtar Donetsk",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#FF6600", "#000000"],
+    "initial": "SHA"
+  },
+  "crvena-zvezda": {
+    "name": "Crvena Zvezda",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "CRZ"
+  },
+  "sturm-graz": {
+    "name": "Sturm Graz",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#000000", "#FFFFFF"],
+    "initial": "STG"
+  },
+  "sparta-prag": {
+    "name": "Sparta Praha",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#AC1E33", "#FCCC43"],
+    "initial": "SPP"
+  },
+  "rb-salzburg": {
+    "name": "RB Salzburg",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#FF0026", "#FFFFFF"],
+    "initial": "RBS"
+  },
+  "slovan-bratislava": {
+    "name": "Slovan Bratislava",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#1569C7", "#FFFFFF"],
+    "initial": "SLB"
+  },
+  "young-boys": {
+    "name": "Young Boys",
+    "league": "others",
+    "competitions": ["ucl"],
+    "colors": ["#FFED00", "#000000"],
+    "initial": "YB"
+  },
+  "olympiakos": {
+    "name": "Olympiakos",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#D31110", "#FFFFFF"],
+    "initial": "OLY"
+  },
+  "rangers": {
+    "name": "Rangers",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#0032A0", "#FF0000"],
+    "initial": "RAN"
+  },
+  "bodo-glimt": {
+    "name": "Bodø/Glimt",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FFF200", "#000000"],
+    "initial": "BOD"
+  },
+  "anderlecht": {
+    "name": "Anderlecht",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#510E7C", "#FFFFFF"],
+    "initial": "AND"
+  },
+  "fcsb": {
+    "name": "FCSB",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#0B3886", "#FF0000"],
+    "initial": "FCS"
+  },
+  "ajax": {
+    "name": "Ajax",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "AJA"
+  },
+  "viktoria-plzen": {
+    "name": "Viktoria Plzeň",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#131F5E", "#FF0000"],
+    "initial": "VPL"
+  },
+  "ferencvaros": {
+    "name": "Ferencváros",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#006633", "#FFFFFF"],
+    "initial": "FER"
+  },
+  "porto": {
+    "name": "Porto",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#0033AB", "#FFFFFF"],
+    "initial": "POR"
+  },
+  "az": {
+    "name": "AZ Alkmaar",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#C70039", "#FFFFFF"],
+    "initial": "AZ"
+  },
+  "midtjylland": {
+    "name": "Midtjylland",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#000000", "#FF0000"],
+    "initial": "MID"
+  },
+  "union-sg": {
+    "name": "Union SG",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FFE01B", "#1E3160"],
+    "initial": "USG"
+  },
+  "paok": {
+    "name": "PAOK",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#000000", "#FFFFFF"],
+    "initial": "PAO"
+  },
+  "twente": {
+    "name": "Twente",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "TWE"
+  },
+  "braga": {
+    "name": "Braga",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "BRA"
+  },
+  "elfsborg": {
+    "name": "Elfsborg",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FFEC00", "#000000"],
+    "initial": "ELF"
+  },
+  "maccabi-tel-aviv": {
+    "name": "Maccabi Tel Aviv",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FFDD00", "#0F4FA8"],
+    "initial": "MTA"
+  },
+  "slavia-prag": {
+    "name": "Slavia Praha",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#E30613", "#FFFFFF"],
+    "initial": "SLP"
+  },
+  "malmo": {
+    "name": "Malmö",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#37A1DC", "#FFFFFF"],
+    "initial": "MAL"
+  },
+  "rigas-fs": {
+    "name": "Riga FS",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#FF0000", "#FFFFFF"],
+    "initial": "RFS"
+  },
+  "ludogorets": {
+    "name": "Ludogorets",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#00843D", "#FFFFFF"],
+    "initial": "LUD"
+  },
+  "dinamo-kiev": {
+    "name": "Dinamo Kiev",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#0057B8", "#FFFFFF"],
+    "initial": "DKY"
+  },
+  "karabag": {
+    "name": "Karabağ",
+    "league": "others",
+    "competitions": ["uel"],
+    "colors": ["#000000", "#FFFFFF"],
+    "initial": "QAR"
+  },
+  "guimaraes": {
+    "name": "Vitória Guimarães",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FFFFFF", "#000000"],
+    "initial": "VGU"
+  },
+  "rapid-wien": {
+    "name": "Rapid Wien",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A651", "#FFFFFF"],
+    "initial": "RAP"
+  },
+  "djurgarden": {
+    "name": "Djurgårdens IF",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#1A5DC8", "#D81E05"],
+    "initial": "DJU"
+  },
+  "lugano": {
+    "name": "Lugano",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#000000", "#FFFFFF"],
+    "initial": "LUG"
+  },
+  "legia-warsaw": {
+    "name": "Legia Warsaw",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#323232", "#FF0000"],
+    "initial": "LEG"
+  },
+  "cercle-brugge": {
+    "name": "Cercle Brugge",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#009649", "#000000"],
+    "initial": "CER"
+  },
+  "jagiellonia-bialystok": {
+    "name": "Jagiellonia Białystok",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FFDD00", "#E30613"],
+    "initial": "JAG"
+  },
+  "shamrock-rovers": {
+    "name": "Shamrock Rovers",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#009A44", "#FFFFFF"],
+    "initial": "SHA"
+  },
+  "apoel": {
+    "name": "APOEL",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FAED25", "#0046AD"],
+    "initial": "APO"
+  },
+  "pafos": {
+    "name": "Pafos",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0046AD", "#FFFFFF"],
+    "initial": "PAF"
+  },
+  "panathinaikos": {
+    "name": "Panathinaikos",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A850", "#FFFFFF"],
+    "initial": "PAN"
+  },
+  "nk-olimpija": {
+    "name": "NK Olimpija",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A651", "#FFFFFF"],
+    "initial": "NKO"
+  },
+  "gent": {
+    "name": "Gent",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0033A0", "#FFFFFF"],
+    "initial": "GNT"
+  },
+  "kopenhag": {
+    "name": "København",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0C1C7C", "#FFFFFF"],
+    "initial": "FCK"
+  },
+  "vikingur-reykjavik": {
+    "name": "Vikingur Reykjavik",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FF0000", "#000000"],
+    "initial": "VIK"
+  },
+  "fk-borac-banja-luka": {
+    "name": "FK Borac Banja Luka",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#DD0000", "#0000DD"],
+    "initial": "BOR"
+  },
+  "celje": {
+    "name": "Celje",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FFED00", "#0000FF"],
+    "initial": "CEJ"
+  },
+  "omonya": {
+    "name": "Omonia",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A651", "#FFFFFF"],
+    "initial": "OMO"
+  },
+  "molde": {
+    "name": "Molde",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0A2973", "#FFFFFF"],
+    "initial": "MOL"
+  },
+  "backa-topola": {
+    "name": "Bačka Topola",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FFD200", "#003DA5"],
+    "initial": "TSC"
+  },
+  "hearts": {
+    "name": "Hearts",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#9E1F63", "#FFFFFF"],
+    "initial": "HEA"
+  },
+  "mlada-bolesav": {
+    "name": "Mladá Boleslav",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A0E2", "#FFFFFF"],
+    "initial": "MLB"
+  },
+  "astana": {
+    "name": "Astana",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A0E2", "#FFED00"],
+    "initial": "AST"
+  },
+  "st-gallen": {
+    "name": "St. Gallen",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0E8A37", "#FFFFFF"],
+    "initial": "FCG"
+  },
+  "hjk": {
+    "name": "HJK",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0033A0", "#FFFFFF"],
+    "initial": "HJK"
+  },
+  "noah": {
+    "name": "Noah",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#FFCC00", "#FFFFFF"],
+    "initial": "NOA"
+  },
+  "the-new-saints": {
+    "name": "The New Saints",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#00A651", "#FFFFFF"],
+    "initial": "TNS"
+  },
+  "dinamo-minsk": {
+    "name": "Dinamo Minsk",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#0066B3", "#FFFFFF"],
+    "initial": "DIN"
+  },
+  "larne": {
+    "name": "Larne",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#DF0024", "#000000"],
+    "initial": "LAR"
+  },
+  "lask-linz": {
+    "name": "LASK Linz",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#000000", "#FFFFFF"],
+    "initial": "LSK"
+  },
+  "petrocub": {
+    "name": "Petrocub",
+    "league": "others",
+    "competitions": ["uecl"],
+    "colors": ["#2B3F98", "#FFFFFF"],
+    "initial": "PET"
+  }
+}

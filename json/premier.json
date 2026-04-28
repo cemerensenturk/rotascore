@@ -1,0 +1,135 @@
+{
+  "manchester-city": {
+    "name": "Manchester City",
+    "league": "premier-league",
+    "competitions": ["premier-league", "ucl"],
+    "colors": ["#6CABDD", "#1C2C5B"],
+    "initial": "MC"
+  },
+  "manchester-united": {
+    "name": "Manchester United",
+    "league": "premier-league",
+    "competitions": ["premier-league", "uel"],
+    "colors": ["#DA291C", "#000000"],
+    "initial": "MU"
+  },
+  "liverpool": {
+    "name": "Liverpool",
+    "league": "premier-league",
+    "competitions": ["premier-league", "ucl"],
+    "colors": ["#C8102E", "#00B2A9"],
+    "initial": "LIV"
+  },
+  "chelsea": {
+    "name": "Chelsea",
+    "league": "premier-league",
+    "competitions": ["premier-league", "uecl"],
+    "colors": ["#034694", "#FFFFFF"],
+    "initial": "CHE"
+  },
+  "arsenal": {
+    "name": "Arsenal",
+    "league": "premier-league",
+    "competitions": ["premier-league", "ucl"],
+    "colors": ["#EF0107", "#FFFFFF"],
+    "initial": "ARS"
+  },
+  "tottenham-hotspur": {
+    "name": "Tottenham Hotspur",
+    "league": "premier-league",
+    "competitions": ["premier-league", "uel"],
+    "colors": ["#132257", "#FFFFFF"],
+    "initial": "TOT"
+  },
+  "everton": {
+    "name": "Everton",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#003399", "#FFFFFF"],
+    "initial": "EVE"
+  },
+  "west-ham-united": {
+    "name": "West Ham United",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#7A263A", "#1BB1E7"],
+    "initial": "WHU"
+  },
+  "aston-villa": {
+    "name": "Aston Villa",
+    "league": "premier-league",
+    "competitions": ["ucl", "premier-league"],
+    "colors": ["#95BFE5", "#670E36"],
+    "initial": "AVL"
+  },
+  "newcastle-united": {
+    "name": "Newcastle United",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#241F20", "#FFFFFF"],
+    "initial": "NEW"
+  },
+  "brighton-and-hove-albion": {
+    "name": "Brighton & Hove Albion",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#0057B8", "#FFFFFF"],
+    "initial": "BHA"
+  },
+  "brentford": {
+    "name": "Brentford",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#E30613", "#FFFFFF"],
+    "initial": "BRE"
+  },
+  "fulham": {
+    "name": "Fulham",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#FFFFFF", "#000000"],
+    "initial": "FUL"
+  },
+  "crystal-palace": {
+    "name": "Crystal Palace",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#1B458F", "#C4122E"],
+    "initial": "CRY"
+  },
+  "wolverhampton-wanderers": {
+    "name": "Wolverhampton Wanderers",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#FDB913", "#231F20"],
+    "initial": "WOL"
+  },
+  "bournemouth": {
+    "name": "AFC Bournemouth",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#DA291C", "#000000"],
+    "initial": "BOU"
+  },
+  "nottingham-forest": {
+    "name": "Nottingham Forest",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#DD0000", "#FFFFFF"],
+    "initial": "NOT"
+  },
+  "ipswich-town": {
+    "name": "Ipswich Town",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#0044AA", "#FFFFFF"],
+    "initial": "IPS"
+  },
+  "southampton": {
+    "name": "Southampton",
+    "league": "premier-league",
+    "competitions": ["premier-league"],
+    "colors": ["#D71920", "#FFFFFF"],
+    "initial": "SOU"
+  }
+}

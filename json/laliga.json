@@ -1,0 +1,142 @@
+{
+  "real-madrid": {
+    "name": "Real Madrid CF",
+    "league": "la-liga",
+    "competitions": ["la-liga", "ucl"],
+    "colors": ["#FFFFFF", "#00529F"],
+    "initial": "RMA"
+  },
+  "barcelona": {
+    "name": "FC Barcelona",
+    "league": "la-liga",
+    "competitions": ["la-liga", "ucl"],
+    "colors": ["#A50044", "#004D98"],
+    "initial": "FCB"
+  },
+  "atletico-madrid": {
+    "name": "Atlético de Madrid",
+    "league": "la-liga",
+    "competitions": ["la-liga", "ucl"],
+    "colors": ["#DB003D", "#FFFFFF"],
+    "initial": "ATM"
+  },
+  "sevilla": {
+    "name": "Sevilla FC",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#FFFFFF", "#E30613"],
+    "initial": "SEV"
+  },
+  "real-betis": {
+    "name": "Real Betis Balompié",
+    "league": "la-liga",
+    "competitions": ["la-liga", "uecl"],
+    "colors": ["#FFFFFF", "#00954C"],
+    "initial": "RBB"
+  },
+  "valencia": {
+    "name": "Valencia CF",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#FFFFFF", "#F18A00"],
+    "initial": "VAL"
+  },
+  "villarreal": {
+    "name": "Villarreal CF",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#FFE667", "#005187"],
+    "initial": "VIL"
+  },
+  "real-sociedad": {
+    "name": "Real Sociedad",
+    "league": "la-liga",
+    "competitions": ["la-liga", "uel"],
+    "colors": ["#0B67B0", "#FFFFFF"],
+    "initial": "RSO"
+  },
+  "athletic-bilbao": {
+    "name": "Athletic Club",
+    "league": "la-liga",
+    "competitions": ["la-liga", "uel"],
+    "colors": ["#EE2523", "#FFFFFF"],
+    "initial": "ATH"
+  },
+  "girona": {
+    "name": "Girona FC",
+    "league": "la-liga",
+    "competitions": ["la-liga", "ucl"],
+    "colors": ["#CF0A2C", "#FFFFFF"],
+    "initial": "GIR"
+  },
+  "celta-vigo": {
+    "name": "RC Celta de Vigo",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#7EC0EE", "#FFFFFF"],
+    "initial": "CEL"
+  },
+  "osasuna": {
+    "name": "CA Osasuna",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#D91A21", "#083681"],
+    "initial": "OSA"
+  },
+  "mallorca": {
+    "name": "RCD Mallorca",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#ED1B24", "#000000"],
+    "initial": "RCD"
+  },
+  "alaves": {
+    "name": "Deportivo Alavés",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#0067B1", "#FFFFFF"],
+    "initial": "ALA"
+  },
+  "real-valladolid": {
+    "name": "Real Valladolid CF",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#FFFFFF", "#68217A"],
+    "initial": "RVL"
+  },
+  "getafe": {
+    "name": "Getafe CF",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#005999", "#FFFFFF"],
+    "initial": "GET"
+  },
+  "rayo-vallecano": {
+    "name": "Rayo Vallecano",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#FFFFFF", "#E53027"],
+    "initial": "RAY"
+  },
+  "las-palmas": {
+    "name": "UD Las Palmas",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#FFDD00", "#0066B3"],
+    "initial": "LPA"
+  },
+  "espanyol": {
+    "name": "RCD Espanyol",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#0082CA", "#FFFFFF"],
+    "initial": "ESP"
+  },
+  "leganes": {
+    "name": "CD Leganés",
+    "league": "la-liga",
+    "competitions": ["la-liga"],
+    "colors": ["#1A3C95", "#FFFFFF"],
+    "initial": "LEG"
+  }
+}

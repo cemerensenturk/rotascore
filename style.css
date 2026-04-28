@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+::selection{
+    color: #ffffff;
+    background-color: #4c8527;
+}
+
+body {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    background: url(./img/photo1.jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    color: #333;
+}
+
+canvas {
+    border: 3px solid #ffffff;
+    background: url(./img/rota.png);
+    margin-top: 20px;
+    border-radius: 50%;
+    background-position: center;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-image 0.5s ease;
+}
+
+h1 {
+    font-weight: 600;
+    font-size: 24px;
+    margin: 5px;
+    color: #4c8527;
+    border: 1px dashed #4c8527;
+    border-radius: 8px;
+}
+
+p {
+    font-size: 14px;
+    margin: 5px;
+    color: #555;
+}
+
+label{
+    font-size: 15px;
+}
+
+.control-center {
+    background-color: #f8f9fa;
+    max-width: 380px;
+    width: 95%;
+    margin: auto;
+    padding: 8px;
+    border: 2px solid #4c8527;
+    border-radius: 12px;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.team-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+select {
+    font-size: 13px;
+    padding: 2px;
+    border-radius: 8px;
+    border: 1px solid #4c8527;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+select:focus {
+    border-color: #4c8527;
+    box-shadow: 0 0 5px #4c8527;
+}
+
+button {
+    font-size: 16px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: white;
+    background: #4c8527;
+    width: 40%;
+    margin: auto
+}
+
+button:hover {
+    background: #4c8527;
+    box-shadow: 0px 4px 10px #4c8527;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.scoreboard {
+    display: flex;
+    justify-content: space-around;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#goal-history {
+    max-height: 120px;
+    overflow-y: auto;
+    /* margin: 6px; */
+    padding: 10px;
+    border: 1px dashed #4c8527;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#goal-history h3 {
+    margin: 0;
+    font-size: 14px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+.sticky-icon{
+	z-index:1;
+	position:fixed;
+	top:30%;
+	left:0%;
+	width:160px;
+	display:flex;
+	flex-direction:column;
+}  
+
+.sticky-icon a {
+    transform: translate(-110px, 0px);
+    border-radius: 0px 50px 50px 0px;
+    text-align: left;
+    margin: 2px;
+    text-decoration: none;
+    padding: 10px;
+    font-size: 14px;
+    transition: all 0.8s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sticky-icon a:hover{
+	color:#FFF;
+	transform:translate(0px,0px);
+    font-weight: bold;
+}	
+
+.sticky-icon a:hover i{
+	transform:rotate(360deg);
+}
+
+.main-website{
+	background-color:#4c8527;
+	color:#FFF;
+}
+	
+.sticky-icon a img{
+	max-width: 32px;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.goal-entry-anim {
+    animation: slideIn 1.5s ease-out forwards;
+}
+
+@keyframes pulseScore {
+    0% { transform: scale(1); text-shadow: none; }
+    50% { transform: scale(1.1); text-shadow: 0px 0px 10px var(--pulse-color, #4c8527); }
+    100% { transform: scale(1); text-shadow: none; }
+}
+
+.score-pulse {
+    animation: pulseScore 1.5s ease-out;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    body {
+        background-size: auto; 
+    }
+
+    canvas {
+        margin-top: 10px;
+    }
+
+    button {
+        font-size: 15px;
+        padding: 5px;
+    }
+
+    .sticky-icon {
+        display: none;
+    }
+}

@@ -1,0 +1,121 @@
+{
+  "paris-saint-germain": {
+    "name": "Paris Saint-Germain",
+    "league": "ligue-1",
+    "competitions": ["ligue-1", "ucl"],
+    "colors": ["#004170", "#DA291C"],
+    "initial": "PSG"
+  },
+  "olympique-lyonnais": {
+    "name": "Olympique Lyonnais",
+    "league": "ligue-1",
+    "competitions": ["ligue-1", "uel"],
+    "colors": ["#FFFFFF", "#1D428A"],
+    "initial": "OL"
+  },
+  "marseille": {
+    "name": "Olympique de Marseille",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#0099D8", "#FFFFFF"],
+    "initial": "OM"
+  },
+  "monaco": {
+    "name": "AS Monaco",
+    "league": "ligue-1",
+    "competitions": ["ligue-1", "ucl"],
+    "colors": ["#FFFFFF", "#E2001A"],
+    "initial": "ASM"
+  },
+  "lille": {
+    "name": "LOSC Lille",
+    "league": "ligue-1",
+    "competitions": ["ligue-1", "ucl"],
+    "colors": ["#C10017", "#FFFFFF"],
+    "initial": "LL"
+  },
+  "nice": {
+    "name": "OGC Nice",
+    "league": "ligue-1",
+    "competitions": ["ligue-1", "uel"],
+    "colors": ["#E03A3E", "#000000"],
+    "initial": "NIC"
+  },
+  "rennes": {
+    "name": "Stade Rennais FC",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#EA221F", "#000000"],
+    "initial": "REN"
+  },
+  "brest": {
+    "name": "Stade Brestois 29",
+    "league": "ligue-1",
+    "competitions": ["ligue-1", "ucl"],
+    "colors": ["#ED1C24", "#FFFFFF"],
+    "initial": "B29"
+  },
+  "lens": {
+    "name": "RC Lens",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#FFDD00", "#C8102E"],
+    "initial": "RCL"
+  },
+  "reims": {
+    "name": "Stade de Reims",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#E02631", "#FFFFFF"],
+    "initial": "SDR"
+  },
+  "strasbourg": {
+    "name": "RC Strasbourg Alsace",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#1C3F95", "#FFFFFF"],
+    "initial": "RCSA"
+  },
+  "montpellier": {
+    "name": "Montpellier HSC",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#304795", "#FF7900"],
+    "initial": "MON"
+  },
+  "nantes": {
+    "name": "FC Nantes",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#FCD647", "#00844A"],
+    "initial": "NAN"
+  },
+  "toulouse": {
+    "name": "Toulouse FC",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#FFFFFF", "#7030A0"],
+    "initial": "TFC"
+  },
+  "angers": {
+    "name": "Angers SCO",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#FFFFFF", "#000000"],
+    "initial": "SCO"
+  },
+  "le-havre": {
+    "name": "Le Havre AC",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#17479E", "#87CEEB"],
+    "initial": "HAC"
+  },
+  "auxerre": {
+    "name": "AJ Auxerre",
+    "league": "ligue-1",
+    "competitions": ["ligue-1"],
+    "colors": ["#0062B3", "#FFFFFF"],
+    "initial": "AJA"
+  }
+}
