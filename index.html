@@ -3,61 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1220">
     <title>RotaScore by Kafeinal</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/x-icon" href="./img/favicon.png">
 </head>
 <body>
-    <div class="control-center">
-        <h1>RotaScore</h1>
-        <div class="team-selection">
-            <div class="filter-section">
-                <label for="filter-category">League:</label>
-                <select id="filter-category" onchange="filterTeams()">
-                    <option value="all">All Teams</option>
-                    <optgroup label="Leagues">
-                        <option value="premier-league">Premier League</option>
-                        <option value="la-liga">La Liga</option>
-                        <option value="bundesliga">Bundesliga</option>
-                        <option value="serie-a">Serie A</option>
-                        <option value="ligue-1">Ligue 1</option>
-                        <option value="super-lig">Trendyol Süper Lig</option>
-                        <option value="others">Other Teams</option>
-                    </optgroup>
-                    <optgroup label="Tournaments">
-                        <option value="worldcup">FIFA World Cup 2026</option>
-                        <option value="ucl">UEFA Champions League</option>
-                        <option value="uel">UEFA Europa League</option>
-                        <option value="uecl">UEFA Conference League</option>
-                    </optgroup>
-                </select>
+    <main class="app">
+        <!-- Oyun: mobilde en üstte -->
+        <section class="stage" id="stage">
+            <div class="scorebug" id="scorebug">
+                <div class="sb-team sb-home">
+                    <span class="sb-logo" id="sb-home-logo"></span>
+                    <span class="sb-abbr" id="sb-home-abbr">HOME</span>
+                </div>
+                <div class="sb-score">
+                    <span id="sb-home-score">0</span>
+                    <span class="sb-dash">-</span>
+                    <span id="sb-away-score">0</span>
+                </div>
+                <div class="sb-team sb-away">
+                    <span class="sb-abbr" id="sb-away-abbr">AWAY</span>
+                    <span class="sb-logo" id="sb-away-logo"></span>
+                </div>
+                <div class="sb-clock" id="sb-clock"><span class="live-dot"></span><span id="sb-clock-text">0'</span></div>
             </div>
-            <label for="team1">Home:
-                <select id="team1-select">
-                </select>
-            </label>
+            <div class="pitch">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+            <div class="ticker" id="ticker">Pick two teams and kick off</div>
+        </section>
 
-            <label for="team2">Away:
-                <select id="team2-select">
+        <!-- Takım seçimi -->
+        <section class="panel controls">
+            <div class="brand">
+                <h1 class="brand-title"><img class="brand-logo" src="./img/brand.webp" alt="RotaScore" width="52" height="52"></h1>
+                <button class="icon-btn" id="sound-toggle" type="button" aria-label="Sound">🔊</button>
+            </div>
+            <label class="field">
+                <span>League</span>
+                <select id="filter-category">
+                    <option value="all">All Teams</option>
+                    <!-- Ligler ve turnuvalar json/competitions.json dosyasından gelir -->
                 </select>
             </label>
-            <button class="startGame" onclick="startGame()">Start Game</button>
-            <div class="scoreboard">
-                <p>Score: <span id="score">0 - 0</span></p>
-                <p>Time: <span id="time">1</span>'</p>
+            <div class="matchup">
+                <button class="team-pick" id="pick-home" type="button" data-side="home"></button>
+                <span class="vs">vs</span>
+                <button class="team-pick" id="pick-away" type="button" data-side="away"></button>
+            </div>
+            <button class="primary" id="kickoff-btn" type="button">Kick off</button>
+        </section>
+
+        <!-- İstatistikler ve maçın olayları -->
+        <section class="panel match-stats" id="match-stats">
+            <h2>Match stats</h2>
+            <div class="stats" id="stats"></div>
+            <ol class="timeline" id="timeline"></ol>
+        </section>
+    </main>
+
+    <!-- Logolu takım seçici -->
+    <div class="sheet" id="picker" hidden>
+        <div class="sheet-backdrop" data-close></div>
+        <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+            <div class="sheet-head">
+                <h2 id="picker-title">Choose team</h2>
+                <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
+            </div>
+            <input class="search" id="picker-search" type="search" placeholder="Search all teams…" autocomplete="off">
+            <div class="team-list" id="picker-list"></div>
+        </div>
+    </div>
+
+    <!-- Maç sonu kartı -->
+    <div class="sheet" id="result" hidden>
+        <div class="sheet-backdrop" data-close></div>
+        <div class="sheet-panel result-panel" role="dialog" aria-modal="true" aria-label="Full-time result">
+            <img class="result-card" id="result-card" alt="Match result card">
+            <div class="result-actions">
+                <button class="primary" id="share-btn" type="button">Share</button>
+                <button class="secondary" id="download-btn" type="button">Download</button>
+            </div>
+            <div class="result-actions">
+                <button class="secondary" id="rematch-btn" type="button">Rematch</button>
+                <button class="secondary" type="button" data-close>Close</button>
             </div>
         </div>
-        <div id="goal-history">
-            <h3>Goal History</h3>
-        </div>        
     </div>
-    <canvas id="gameCanvas"></canvas>
 
     <div class="sticky-icon">
         <a href="https://cemeren.dev" class="main-website">
             <div>cemeren.dev</div><img src="./img/as-removebg-preview.png">
         </a>
     </div>
+    <script src="sound.js"></script>
     <script src="script.js"></script>
+    <script src="ui.js"></script>
 </body>
 </html>

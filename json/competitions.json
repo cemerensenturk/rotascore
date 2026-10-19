@@ -1,0 +1,139 @@
+{
+  "season": "2026-27",
+  "competitions": [
+    {
+      "id": "premier-league",
+      "name": "Premier League",
+      "type": "league",
+      "background": "pl.png",
+      "teams": [
+        "arsenal", "aston-villa", "bournemouth", "brentford", "brighton-and-hove-albion", "chelsea",
+        "coventry-city", "crystal-palace", "everton", "fulham", "hull-city", "ipswich-town",
+        "leeds-united", "liverpool", "manchester-city", "manchester-united", "newcastle-united", "nottingham-forest",
+        "sunderland", "tottenham-hotspur"
+      ]
+    },
+    {
+      "id": "la-liga",
+      "name": "La Liga",
+      "type": "league",
+      "background": "ll.png",
+      "teams": [
+        "alaves", "athletic-bilbao", "atletico-madrid", "barcelona", "celta-vigo", "deportivo-la-coruna",
+        "elche", "espanyol", "getafe", "levante", "malaga", "osasuna",
+        "racing-santander", "rayo-vallecano", "real-betis", "real-madrid", "real-sociedad", "sevilla",
+        "valencia", "villarreal"
+      ]
+    },
+    {
+      "id": "bundesliga",
+      "name": "Bundesliga",
+      "type": "league",
+      "background": "bl.png",
+      "teams": [
+        "augsburg", "union-berlin", "werder-bremen", "borussia-dortmund", "elversberg", "eintracht-frankfurt",
+        "freiburg", "borussia-monchengladbach", "hamburger-sv", "hoffenheim", "koln", "rb-leipzig",
+        "bayer-leverkusen", "mainz", "bayern-munich", "paderborn", "schalke-04", "stuttgart"
+      ]
+    },
+    {
+      "id": "serie-a",
+      "name": "Serie A",
+      "type": "league",
+      "background": "sa.png",
+      "teams": [
+        "atalanta", "bologna", "cagliari", "como", "fiorentina", "frosinone",
+        "genoa", "inter-milan", "juventus", "lazio", "lecce", "ac-milan",
+        "monza", "napoli", "parma", "as-roma", "sassuolo", "torino",
+        "udinese", "venezia"
+      ]
+    },
+    {
+      "id": "ligue-1",
+      "name": "Ligue 1",
+      "type": "league",
+      "background": "l1.png",
+      "teams": [
+        "angers", "auxerre", "brest", "le-havre", "le-mans", "lens",
+        "lille", "lorient", "olympique-lyonnais", "marseille", "monaco", "nice",
+        "paris-fc", "paris-saint-germain", "rennes", "strasbourg", "toulouse", "troyes"
+      ]
+    },
+    {
+      "id": "super-lig",
+      "name": "Trendyol Süper Lig",
+      "type": "league",
+      "background": "tsl.png",
+      "teams": [
+        "galatasaray", "fenerbahce", "besiktas", "trabzonspor", "basaksehir", "samsunspor",
+        "göztepe", "eyupspor", "gaziantep", "kasimpasa", "rizespor", "alanyaspor",
+        "konyaspor", "genclerbirligi", "kocaelispor", "erzurumspor", "amedspor", "corum"
+      ]
+    },
+    {
+      "id": "others",
+      "name": "Other Teams",
+      "type": "others",
+      "background": "rota.png"
+    },
+    {
+      "id": "worldcup",
+      "name": "FIFA World Cup 2026",
+      "type": "national",
+      "background": "fc26.png",
+      "badge": "fifa2026.png",
+      "teams": [
+        "australia", "iran", "iraq", "japan", "jordan", "qatar",
+        "saudi-arabia", "south-korea", "uzbekistan", "algeria", "cape-verde", "dr-congo",
+        "egypt", "ghana", "ivory-coast", "morocco", "senegal", "south-africa",
+        "tunisia", "canada", "curacao", "haiti", "mexico", "panama",
+        "united-states", "argentina", "brazil", "colombia", "ecuador", "paraguay",
+        "uruguay", "new-zealand", "austria", "belgium", "bosnia-and-herzegovina", "croatia",
+        "czech-republic", "england", "france", "germany", "netherlands", "norway",
+        "portugal", "scotland", "spain", "sweden", "switzerland", "turkiye"
+      ]
+    },
+    {
+      "id": "ucl",
+      "name": "UEFA Champions League",
+      "type": "cup",
+      "background": "ucl.png",
+      "teams": [
+        "paris-saint-germain", "bayern-munich", "real-madrid", "liverpool", "inter-milan", "manchester-city",
+        "arsenal", "barcelona", "atletico-madrid", "borussia-dortmund", "as-roma", "sporting-lizbon",
+        "aston-villa", "porto", "manchester-united", "club-brugge", "real-betis", "psv",
+        "feyenoord", "lille", "bodo-glimt", "napoli", "rb-leipzig", "villarreal",
+        "fenerbahce", "shaktar-donetsk", "galatasaray", "slavia-prag", "slovan-bratislava", "stuttgart",
+        "aek-athens", "lask-linz", "como", "lens", "viking", "sabah"
+      ]
+    },
+    {
+      "id": "uel",
+      "name": "UEFA Europa League",
+      "type": "cup",
+      "background": "uel.png",
+      "teams": [
+        "bayer-leverkusen", "benfica", "juventus", "ac-milan", "olympique-lyonnais", "az",
+        "olympiakos", "real-sociedad", "marseille", "ferencvaros", "viktoria-plzen", "union-sg",
+        "dinamo-zagreb", "rb-salzburg", "celtic", "sparta-prag", "rennes", "anderlecht",
+        "sturm-graz", "lech-poznan", "crystal-palace", "bournemouth", "sunderland", "celje",
+        "jagiellonia-bialystok", "omonya", "celta-vigo", "hoffenheim", "besiktas", "torreense",
+        "hapoel-beer-sheva", "nec", "ofi", "lillestrom", "levski-sofia", "ararat-armenia"
+      ]
+    },
+    {
+      "id": "uecl",
+      "name": "UEFA Conference League",
+      "type": "cup",
+      "background": "uecl.png",
+      "teams": [
+        "atalanta", "braga", "ajax", "freiburg", "monaco", "kopenhag",
+        "midtjylland", "crvena-zvezda", "gent", "panathinaikos", "pafos", "brighton-and-hove-albion",
+        "lugano", "getafe", "kups", "twente", "lincoln-red-imps", "fk-borac-banja-luka",
+        "sint-truiden", "brann", "hearts", "kairat", "trabzonspor", "universitatea-craiova",
+        "riga-fc", "hajduk-split", "jablonec", "nordsjaelland", "agf", "inter-escaldes",
+        "thun", "cska-sofia", "kauno-zalgiris", "mjallby", "iberia-1999", "egnatia"
+      ]
+    }
+  ]
+}

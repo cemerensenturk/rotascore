@@ -1,499 +1,938 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const whistleSound = new Audio('./sounds/whistle.mp3');
-const goalSound = new Audio('./sounds/goal.mp3');
+// Simülasyon sabit 400x400'lük bir "dünya" koordinatında çalışır.
+// Ekrandaki gerçek boyut ne olursa olsun çizim bu dünyaya ölçeklenir,
+// böylece hızlar, mesafeler ve gol kontrolü her cihazda aynıdır.
+const WORLD_SIZE = 400;
+const CENTER = WORLD_SIZE / 2;
+const FIELD_RADIUS = 180;   // Saha çemberi ve kalenin dönme mesafesi
+const BALL_RADIUS = 30;
+const BOUNCE_RADIUS = FIELD_RADIUS - BALL_RADIUS; // Topun kenarı çizgiye değince seker
+const BADGE_RADIUS = 62;    // Sahanın ortasındaki lig logosu
+const GOAL_WIDTH = 25;      // Kale derinliği
+const GOAL_HEIGHT = 80;     // Kale ağzı (direkler arası)
+const GOAL_SPEED = 0.8;     // Kalenin adım başına dönüşü (derece)
+const KEEPER_SIZE = 26;     // Kalecinin boyu
+const KEEPER_SPEED = 1.3;   // Kalecinin adım başına en fazla kayması
 
-canvas.width = 400;
-canvas.height = 400;
+// Hız: çarpıştıkça artar, MAX_SPEED'i geçemez; çarpışma olmadan
+// sürtünmeyle yavaş yavaş BASE_SPEED'e iner. Birim: adım başına dünya birimi (60 adım = 1 sn)
+const BASE_SPEED = 3.5;
+const MAX_SPEED = 9.0;
+const FRICTION = 0.992;     // Taban hızın üstündeki fazlalığın adım başına korunan oranı
+const WALL_BOOST = 1.12;    // Duvara çarpınca hızlanma
+const BALL_BOOST = 1.3;     // Toplar çarpışınca hızlanma
+const SPIN_MAX = 0.02;      // Falso: adım başına en fazla dönüş (radyan)
+const SPIN_DECAY = 0.985;
+const TRAIL_LENGTH = 10;
 
-function getRandomSpeed() {
-    const minSpeed = 1.0;
-    const speed = (Math.random() * 2 - 1) * 2.4;
-    return Math.sign(speed) * Math.max(Math.abs(speed), minSpeed);
+// Fizik sabit 60Hz adımlarla ilerler; ekran kaç fps çizerse çizsin
+// toplar gerçek zamanda aynı hızla hareket eder.
+const STEP_MS = 1000 / 60;
+const MAX_STEPS_PER_FRAME = 5;
+const MS_PER_MINUTE = 500;  // Bir maç dakikası = 0.5 sn
+const COUNTDOWN_MS = 3000;
+const GOAL_PAUSE_MS = 3000;
+const HALFTIME_MS = 2500;
+
+let team1 = { index: 0, history: [] };
+let team2 = { index: 1, history: [] };
+let goal = { x: CENTER + FIELD_RADIUS, y: CENTER, angle: 0, speed: GOAL_SPEED };
+let keeper = { pos: 0 }; // Kale ağzı boyunca konumu (kale merkezine göre)
+let score = [0, 0];
+let goalParticles = [];
+let collisionEffects = [];
+let floatingTexts = [];
+let confetti = [];
+let celebration = null;     // { team, elapsed } gol kutlaması sürerken
+let shakeAmount = 0;
+
+// Maç saati: devre, dakika ve uzatma dakikaları
+let clock = { half: 1, minute: 0, added: 0, extra: 0 };
+// İstatistikler: şut, isabetli şut, direk, baskı (topun kaleye daha yakın olduğu adım sayısı)
+let stats = [];
+// Maçın olayları (gol, kurtarış, direk, devre arası...) ve goller
+let matchEvents = [];
+let matchGoals = [];
+
+// "idle" | "countdown" | "playing" | "goalPause" | "halftime" | "ended"
+let gameState = "idle";
+let stateTimer = 0;
+let minuteTimer = 0;
+let pressureSteps = 0;
+
+let loopRunning = false;
+let lastFrameTime = 0;
+let accumulator = 0;
+
+// Ekran ölçeği ve önceden çizilmiş katmanlar
+let renderScale = 1;
+let fieldLayer = null;
+let fieldBadge = null;      // { image, fit: "crop" | "contain" }
+
+// Takımlar (json/teams.json) ve bu sezonun lig/turnuva listeleri (json/competitions.json)
+let teamsDatabase = {};
+let competitions = [];
+
+async function loadJson(file) {
+    const response = await fetch(`./json/${file}`);
+    if (!response.ok) throw new Error(`${file} yüklenemedi: ${response.status}`);
+    return response.json();
 }
 
-let team1 = { x: 170, y: 200, dx: getRandomSpeed(), dy: getRandomSpeed(), history: [] };
-let team2 = { x: 230, y: 200, dx: getRandomSpeed(), dy: getRandomSpeed(), history: [] };
-let goal = { x: 200, y: 50, width: 30, height: 10, angle: 0, speed: 0.8 };
-let score = [0, 0];
-let time = 0;
-let goalParticles = [];
-let shakeAmount = 0;
-let isPaused = false;
-let timeInterval;
-let gameRunning = false;
-let ballRadius = 30;
-let goalWidth = 25;  // Kale genişliği
-let goalHeight = 70; // Kale yüksekliği
-let goalRadius = 180; // Kale merkezinin dönme mesafesi
-
-// Takımları yüklemek için temsili bir nesne
-let teamsDatabase = {};
-
-// Tüm JSON dosyalarını yükleyip teamsDatabase'e ekleyen fonksiyon
 async function loadAllTeams() {
-    const jsonFiles = [
-        'worldcup.json',
-        'premier.json',
-        'laliga.json',
-        'bundesliga.json',
-        'seriea.json',
-        'ligue1.json',
-        'trendyol.json',
-        'others.json'
-    ];
+    const [teams, season] = await Promise.all([loadJson("teams.json"), loadJson("competitions.json")]);
+    teamsDatabase = teams;
+    competitions = season.competitions;
 
-    // Tüm dosyaları sırayla yükle
-    for (const file of jsonFiles) {
-        try {
-            const response = await fetch(`./json/${file}`);
-            if (!response.ok) throw new Error(`${file} yüklenemedi: ${response.status}`);
-
-            const data = await response.json();
-            // Her bir takımı teamsDatabase'e ekle
-            for (const teamId in data) {
-                teamsDatabase[teamId] = data[teamId];
-            }
-        } catch (error) {
-            console.error(`${file} yüklenirken hata oluştu:`, error);
+    // "others": hiçbir lige ya da milli takım turnuvasına yazılmamış kulüpler
+    const placed = new Set();
+    for (const competition of competitions) {
+        if (competition.type === "league" || competition.type === "national") {
+            competition.teams.forEach(id => placed.add(id));
+        }
+    }
+    for (const competition of competitions) {
+        if (competition.type === "others") {
+            competition.teams = Object.keys(teamsDatabase).filter(id => !placed.has(id));
         }
     }
 
-    // Tüm takımlar yüklendikten sonra arayüzü güncelle
-    filterTeams();
+    // competitions.json'da yazım hatası varsa konsolda göster
+    for (const competition of competitions) {
+        const unknown = competition.teams.filter(id => !teamsDatabase[id]);
+        if (unknown.length > 0) {
+            console.warn(`${competition.name}: teams.json'da olmayan takımlar:`, unknown);
+            competition.teams = competition.teams.filter(id => teamsDatabase[id]);
+        }
+    }
+
+    onDataLoaded();
 }
 
-function startGame() {
-    if (gameRunning) return;
+function setSpeed(team, speed) {
+    const current = Math.hypot(team.dx, team.dy) || 1;
+    const clamped = Math.min(MAX_SPEED, Math.max(BASE_SPEED * 0.8, speed));
+    team.dx = (team.dx / current) * clamped;
+    team.dy = (team.dy / current) * clamped;
+}
 
-    resizeCanvas();
+function rotateVelocity(team, angle) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const dx = team.dx;
+    team.dx = dx * cos - team.dy * sin;
+    team.dy = dx * sin + team.dy * cos;
+}
 
-    let team1Name = document.getElementById("team1-select").value;
-    let team2Name = document.getElementById("team2-select").value;
+function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+}
 
-    // Veritabanımızdan takım özelliklerini al
-    team1.color = teamsDatabase[team1Name].colors;
-    team1.initial = teamsDatabase[team1Name].initial;
+// İki açı arasındaki en kısa fark (radyan, 0..PI)
+function angleDifference(a, b) {
+    const diff = Math.abs(a - b) % (Math.PI * 2);
+    return diff > Math.PI ? Math.PI * 2 - diff : diff;
+}
 
-    team2.color = teamsDatabase[team2Name].colors;
-    team2.initial = teamsDatabase[team2Name].initial;
+// ---------- Takımlar ve logolar ----------
 
-    document.getElementById("goal-history").innerHTML = "<h3>Goal History</h3>";
+const logoCache = {};
 
-    whistleSound.play();
+// Kulüpler img/logos, milli takımlar img/flags klasöründen
+function logoPath(data) {
+    if (data.logo) return `logos/${data.logo}`;
+    if (data.flag) return `flags/${data.flag}`;
+    return null;
+}
 
-    gameRunning = true;
-    isPaused = false;
+function loadLogo(file) {
+    if (!logoCache[file]) {
+        logoCache[file] = new Image();
+        logoCache[file].src = `./img/${file}`;
+    }
+    return logoCache[file];
+}
+
+function setupTeam(team, teamId) {
+    const data = teamsDatabase[teamId];
+    team.id = teamId;
+    team.name = data.name;
+    team.color = data.colors;
+    team.initial = data.initial;
+    team.logoImage = null;
+    team.isFlag = !data.logo && !!data.flag;
+    team.sprite = createBallSprite(team);
+
+    // Logo/bayrak varsa yüklenince topu onunla çiz; yüklenemezse renkli top kalır
+    const file = logoPath(data);
+    if (file) {
+        const image = loadLogo(file);
+        image.decode().then(() => {
+            if (team.id !== teamId) return; // bu arada takım değiştiyse
+            team.logoImage = image;
+            team.sprite = createBallSprite(team);
+            if (!loopRunning) render();
+        }).catch(() => {});
+    }
+}
+
+// ---------- Maç akışı ----------
+
+function startGame(homeId, awayId) {
+    if (gameState !== "idle" && gameState !== "ended") return;
+    if (!teamsDatabase[homeId] || !teamsDatabase[awayId]) return;
+
+    setupTeam(team1, homeId);
+    setupTeam(team2, awayId);
+
     score = [0, 0];
-    time = 0;
-    updateScore();
-    document.getElementById("time").innerText = `${time}`;
+    clock = { half: 1, minute: 0, added: 0, extra: 0 };
+    stats = [newStats(), newStats()];
+    matchEvents = [];
+    matchGoals = [];
+    minuteTimer = 0;
+    pressureSteps = 0;
+    goalParticles = [];
+    collisionEffects = [];
+    floatingTexts = [];
+    confetti = [];
+    celebration = null;
+    shakeAmount = 0;
 
-    clearInterval(timeInterval);
-    timeInterval = setInterval(updateTime, 500);
     resetPositions();
-    gameLoop();
+    gameState = "countdown";
+    stateTimer = COUNTDOWN_MS;
+    Sound.startCrowd();
+    uiMatchStarted();
+    startLoop();
 }
 
-function drawDualColorCircle(x, y, radius, colors, teamInitial) {
-    ctx.save();
+function newStats() {
+    return { shots: 0, onTarget: 0, posts: 0, pressure: 0 };
+}
 
-    // Neon glow effect for the ball
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = colors[0] !== "#FFFFFF" ? colors[0] : (colors[1] !== "#000000" ? colors[1] : "#00FFFF");
-    if (ctx.shadowColor === "#000000") ctx.shadowColor = "#FF00FF"; // fallback for pure black teams
+function clockLabel() {
+    return clock.extra > 0 ? `${clock.minute}+${clock.extra}'` : `${clock.minute}'`;
+}
+
+function addEvent(type, team) {
+    const event = { type: type, team: team ? team.index : null, minute: clockLabel() };
+    if (type === "added") event.added = clock.added;
+    matchEvents.push(event);
+    uiEvent(event);
+}
+
+function tickClock() {
+    const halfEnd = clock.half === 1 ? 45 : 90;
+    if (clock.minute < halfEnd) {
+        clock.minute++;
+        if (clock.minute === halfEnd) {
+            // Uzatma dakikaları: ilk yarı 1-3, ikinci yarı 2-5
+            clock.added = clock.half === 1 ? Math.ceil(randomBetween(0, 3)) : Math.ceil(randomBetween(1, 5));
+            addEvent("added");
+        }
+    } else if (clock.extra < clock.added) {
+        clock.extra++;
+    } else {
+        endHalf();
+        return;
+    }
+    uiClockChanged();
+}
+
+function endHalf() {
+    if (clock.half === 1) {
+        gameState = "halftime";
+        stateTimer = HALFTIME_MS;
+        addEvent("halftime");
+        Sound.whistle("half");
+    } else {
+        gameState = "ended";
+        stateTimer = 0;
+        addEvent("fulltime");
+        Sound.whistle("end");
+        Sound.stopCrowd();
+        uiMatchEnded();
+    }
+    uiClockChanged();
+}
+
+function startSecondHalf() {
+    clock = { half: 2, minute: 45, added: 0, extra: 0 };
+    minuteTimer = 0;
+    resetPositions();
+    gameState = "playing";
+    Sound.whistle("start");
+    uiClockChanged();
+}
+
+// ---------- Ekran boyutu ve retina ----------
+
+function resizeCanvas() {
+    const cssSize = Math.min(window.innerWidth - 32, WORLD_SIZE); // kenar boşluğu + çerçeve
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.style.width = `${cssSize}px`;
+    canvas.style.height = `${cssSize}px`;
+    canvas.width = Math.round(cssSize * dpr);
+    canvas.height = Math.round(cssSize * dpr);
+
+    renderScale = canvas.width / WORLD_SIZE;
+
+    fieldLayer = createFieldLayer();
+    if (team1.color) team1.sprite = createBallSprite(team1);
+    if (team2.color) team2.sprite = createBallSprite(team2);
+
+    // Canvas boyutu değişince içeriği silinir, döngü durmuşsa yeniden çiz
+    if (!loopRunning) render();
+}
+
+// Dünya birimiyle çizilen ekran dışı bir canvas oluşturur
+function createLayer(worldSize) {
+    const layer = document.createElement("canvas");
+    const pixels = Math.ceil(worldSize * renderScale);
+    layer.width = pixels;
+    layer.height = pixels;
+    const layerCtx = layer.getContext("2d");
+    layerCtx.scale(pixels / worldSize, pixels / worldSize);
+    return { canvas: layer, ctx: layerCtx, size: worldSize };
+}
+
+// Lige göre sahanın ortasındaki logo. Lig resimlerinin ortasındaki yuvarlak kırpılır;
+// competitions.json'da "badge" verilmişse o resim olduğu gibi kullanılır.
+function setFieldTheme(competition) {
+    const file = competition ? (competition.badge || competition.background) : "rota.png";
+    const fit = competition && competition.badge ? "contain" : "crop";
+    const image = new Image();
+    image.src = `./img/${file}`;
+    image.decode().then(() => {
+        fieldBadge = { image: image, fit: fit };
+        fieldLayer = createFieldLayer();
+        if (!loopRunning) render();
+    }).catch(() => {});
+}
+
+// Saha (çim, çizgiler, lig logosu) hiç değişmediği için bir kere çizilir
+function createFieldLayer() {
+    const layer = createLayer(WORLD_SIZE);
+    const c = layer.ctx;
+
+    c.save();
+    c.beginPath();
+    c.arc(CENTER, CENTER, WORLD_SIZE / 2, 0, Math.PI * 2);
+    c.clip();
+
+    // Çim: ışıklandırılmış gece maçı havası
+    const grass = c.createRadialGradient(CENTER, CENTER - 40, 20, CENTER, CENTER, WORLD_SIZE / 2);
+    grass.addColorStop(0, "#3d8a36");
+    grass.addColorStop(1, "#1c4a20");
+    c.fillStyle = grass;
+    c.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+
+    // Biçilmiş çim şeritleri
+    c.fillStyle = "rgba(255, 255, 255, 0.045)";
+    for (let y = 0; y < WORLD_SIZE; y += 50) {
+        c.fillRect(0, y, WORLD_SIZE, 25);
+    }
+
+    // Orta çizgi ve orta yuvarlak
+    c.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(CENTER - FIELD_RADIUS, CENTER);
+    c.lineTo(CENTER - BADGE_RADIUS - 8, CENTER);
+    c.moveTo(CENTER + BADGE_RADIUS + 8, CENTER);
+    c.lineTo(CENTER + FIELD_RADIUS, CENTER);
+    c.stroke();
+    c.beginPath();
+    c.arc(CENTER, CENTER, BADGE_RADIUS + 8, 0, Math.PI * 2);
+    c.stroke();
+
+    // Kenarlara doğru kararma
+    const vignette = c.createRadialGradient(CENTER, CENTER, 120, CENTER, CENTER, WORLD_SIZE / 2);
+    vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
+    vignette.addColorStop(1, "rgba(0, 0, 0, 0.35)");
+    c.fillStyle = vignette;
+    c.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+    c.restore();
+
+    // Lig logosu
+    if (fieldBadge) {
+        const image = fieldBadge.image;
+        c.save();
+        c.beginPath();
+        c.arc(CENTER, CENTER, BADGE_RADIUS, 0, Math.PI * 2);
+        c.clip();
+        if (fieldBadge.fit === "crop") {
+            const r = image.naturalWidth * 0.185;
+            c.drawImage(image, image.naturalWidth / 2 - r, image.naturalHeight / 2 - r, r * 2, r * 2,
+                CENTER - BADGE_RADIUS, CENTER - BADGE_RADIUS, BADGE_RADIUS * 2, BADGE_RADIUS * 2);
+        } else {
+            c.fillStyle = "#000000";
+            c.fillRect(CENTER - BADGE_RADIUS, CENTER - BADGE_RADIUS, BADGE_RADIUS * 2, BADGE_RADIUS * 2);
+            const size = BADGE_RADIUS * 2.1;
+            c.drawImage(image, CENTER - size / 2, CENTER - size / 2, size, size);
+        }
+        c.restore();
+    }
+
+    // Saha sınırı, hafif parlamayla
+    c.shadowBlur = 12;
+    c.shadowColor = "rgba(160, 255, 200, 0.8)";
+    c.beginPath();
+    c.arc(CENTER, CENTER, FIELD_RADIUS, 0, Math.PI * 2);
+    c.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    c.lineWidth = 3;
+    c.stroke();
+    return layer;
+}
+
+function getGlowColor(colors) {
+    let glow = colors[0] !== "#FFFFFF" ? colors[0] : (colors[1] !== "#000000" ? colors[1] : "#00FFFF");
+    if (glow === "#000000") glow = "#FF00FF"; // fallback for pure black teams
+    return glow;
+}
+
+// Top, neon parlaması ve harfiyle (ya da logosuyla) birlikte bir kere çizilir; her karede sadece kopyalanır
+function createBallSprite(team) {
+    const colors = team.color;
+    const padding = 20; // Parlama için boşluk
+    const layer = createLayer((BALL_RADIUS + padding) * 2);
+    const c = layer.ctx;
+    const mid = layer.size / 2;
+
+    c.shadowBlur = 15;
+    c.shadowColor = getGlowColor(colors);
 
     // Üst yarıyı çiz
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI, true);
-    ctx.fillStyle = colors[0];
-    ctx.fill();
+    c.beginPath();
+    c.arc(mid, mid, BALL_RADIUS, 0, Math.PI, true);
+    c.fillStyle = colors[0];
+    c.fill();
 
     // Alt yarıyı çiz
-    ctx.beginPath();
-    ctx.arc(x, y, radius, Math.PI, 2 * Math.PI, true);
-    ctx.fillStyle = colors[1];
-    ctx.fill();
+    c.beginPath();
+    c.arc(mid, mid, BALL_RADIUS, Math.PI, 2 * Math.PI, true);
+    c.fillStyle = colors[1];
+    c.fill();
+    c.shadowBlur = 0;
+
+    if (team.logoImage && team.isFlag) {
+        // Bayrak topun tamamını kaplar
+        c.save();
+        c.beginPath();
+        c.arc(mid, mid, BALL_RADIUS, 0, Math.PI * 2);
+        c.clip();
+        c.drawImage(team.logoImage, mid - BALL_RADIUS, mid - BALL_RADIUS, BALL_RADIUS * 2, BALL_RADIUS * 2);
+        c.restore();
+        c.beginPath();
+        c.arc(mid, mid, BALL_RADIUS - 1, 0, Math.PI * 2);
+        c.strokeStyle = "rgba(255, 255, 255, 0.9)";
+        c.lineWidth = 2;
+        c.stroke();
+        return layer;
+    }
+
+    if (team.logoImage) {
+        // Takım renkleri dışta halka olarak kalır, logo beyaz zeminin ortasında
+        const inner = BALL_RADIUS - 5;
+        c.beginPath();
+        c.arc(mid, mid, inner, 0, Math.PI * 2);
+        c.fillStyle = "#FFFFFF";
+        c.fill();
+
+        const logoSize = inner * 1.5;
+        c.drawImage(team.logoImage, mid - logoSize / 2, mid - logoSize / 2, logoSize, logoSize);
+        return layer;
+    }
 
     // Harfi çiz
-    ctx.shadowBlur = 0; // Disable shadow for text
-    ctx.fillStyle = (colors.includes("#FFFFFF")) ? "black" : "white";
-    ctx.font = `bold ${radius * 0.6}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(teamInitial, x, y);
+    c.fillStyle = colors.includes("#FFFFFF") ? "black" : "white";
+    c.font = `bold ${BALL_RADIUS * 0.6}px Arial`;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillText(team.initial, mid, mid);
 
-    ctx.restore();
+    return layer;
 }
 
+// ---------- Çizim ----------
+
 function drawTrail(team) {
-    if (!team.history || team.history.length < 2) return;
-    for (let i = 0; i < team.history.length; i++) {
-        let alpha = 0.8 * (1 - i / team.history.length);
-        let r = ballRadius * (1 - (i / team.history.length) * 0.6);
-        ctx.save();
-        ctx.globalAlpha = alpha;
+    const length = team.history.length;
+    if (length < 2) return;
+    ctx.fillStyle = team.color[0];
+    for (let i = 0; i < length; i++) {
+        const t = i / length;
+        ctx.globalAlpha = 0.8 * (1 - t);
         ctx.beginPath();
-        ctx.arc(team.history[i].x, team.history[i].y, r, 0, Math.PI * 2);
-        ctx.fillStyle = team.color[0];
+        ctx.arc(team.history[i].x, team.history[i].y, BALL_RADIUS * (1 - t * 0.6), 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
     }
+    ctx.globalAlpha = 1;
+}
+
+function drawBall(team) {
+    const sprite = team.sprite;
+    const half = sprite.size / 2;
+    ctx.drawImage(sprite.canvas, team.x - half, team.y - half, sprite.size, sprite.size);
 }
 
 function drawTeams() {
     drawTrail(team1);
     drawTrail(team2);
-    drawDualColorCircle(team1.x, team1.y, ballRadius, team1.color, team1.initial);
-    drawDualColorCircle(team2.x, team2.y, ballRadius, team2.color, team2.initial);
-}
-
-function changeBackground(category) {
-    const canvas = document.getElementById("gameCanvas");
-
-    // Önce mevcut geçiş animasyonu tamamlansın
-    canvas.style.transition = "background-image 1s ease";
-
-    // Kategori/lige göre arkaplan resmini belirle
-    let newBackground = "url(./img/rota.png)";
-
-    switch (category) {
-        case "premier-league":
-            newBackground = "url(./img/pl.png)";
-            break;
-        case "la-liga":
-            newBackground = "url(./img/ll.png)";
-            break;
-        case "bundesliga":
-            newBackground = "url(./img/bl.png)";
-            break;
-        case "super-lig":
-            newBackground = "url(./img/tsl.png)";
-            break;
-        case "serie-a":
-            newBackground = "url(./img/sa.png)";
-            break;
-        case "ligue-1":
-            newBackground = "url(./img/l1.png)";
-            break;
-        case "ucl":
-            newBackground = "url(./img/ucl.png)";
-            break;
-        case "uel":
-            newBackground = "url(./img/uel.png)";
-            break;
-        case "uecl":
-            newBackground = "url(./img/uecl.png)";
-            break;
-        case "worldcup":
-            newBackground = "url(./img/fc26.png)";
-            break;
-
-        default:
-            newBackground = "url(./img/rota.png)";
-    }
-
-    canvas.style.backgroundImage = newBackground;
-}
-
-function filterTeams() {
-    const selectedCategory = document.getElementById("filter-category").value;
-    const team1Select = document.getElementById("team1-select");
-    const team2Select = document.getElementById("team2-select");
-
-    // Mevcut seçimleri kaydet
-    const team1Current = team1Select.value;
-    const team2Current = team2Select.value;
-
-    // Seçim kutularını temizle
-    team1Select.innerHTML = "";
-    team2Select.innerHTML = "";
-
-    // Filtreleme ve ekleme
-    for (const teamId in teamsDatabase) {
-        const team = teamsDatabase[teamId];
-
-        // Tüm takımlar seçildiğinde veya takım bu kategoride ise
-        if (selectedCategory === "all" ||
-            team.league === selectedCategory ||
-            team.competitions.includes(selectedCategory)) {
-
-            // Takım 1 seçim kutusuna ekle
-            const option1 = document.createElement("option");
-            option1.value = teamId;
-            option1.textContent = team.name;
-            team1Select.appendChild(option1);
-
-            // Takım 2 seçim kutusuna ekle
-            const option2 = document.createElement("option");
-            option2.value = teamId;
-            option2.textContent = team.name;
-            team2Select.appendChild(option2);
-        }
-    }
-
-    // Önceki seçimleri korumaya çalış (eğer hala filtrelenen takımlar arasındaysa)
-    if (Array.from(team1Select.options).some(opt => opt.value === team1Current)) {
-        team1Select.value = team1Current;
-    }
-
-    if (Array.from(team2Select.options).some(opt => opt.value === team2Current)) {
-        team2Select.value = team2Current;
-    }
-
-    changeBackground(selectedCategory);
+    drawBall(team1);
+    drawBall(team2);
 }
 
 function drawGoal() {
-    let radian = (goal.angle * Math.PI) / 180;
-
-    // Kale merkezinin konumunu hesapla
-    goal.x = 200 + Math.cos(radian) * goalRadius;
-    goal.y = 200 + Math.sin(radian) * goalRadius;
-
     ctx.save();
     ctx.translate(goal.x, goal.y);
 
     // Kalenin açısını, merkeze bakacak şekilde ayarla
-    let angleToCenter = Math.atan2(200 - goal.y, 200 - goal.x);
-    ctx.rotate(angleToCenter);
+    ctx.rotate(Math.atan2(CENTER - goal.y, CENTER - goal.x));
 
-    // Kalenin arka plan kısmı (isteğe bağlı, ağ etkisi için)
-    ctx.beginPath();
-    ctx.rect(-goalWidth / 2, -goalHeight / 2, goalWidth, goalHeight);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Yarı saydam beyaz (ağ etkisi)
-    ctx.fill();
-    ctx.closePath();
+    // Kalenin arka plan kısmı (ağ etkisi)
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillRect(-GOAL_WIDTH / 2, -GOAL_HEIGHT / 2, GOAL_WIDTH, GOAL_HEIGHT);
 
-    ctx.beginPath();
-    ctx.rect(-goalWidth / 2, -goalHeight / 2, goalWidth, 3);
+    // Direkler
     ctx.fillStyle = "white";
-    ctx.fill();
-    ctx.closePath();
+    ctx.fillRect(-GOAL_WIDTH / 2, -GOAL_HEIGHT / 2, GOAL_WIDTH, 3);
+    ctx.fillRect(-GOAL_WIDTH / 2, -GOAL_HEIGHT / 2, 3, GOAL_HEIGHT);
+    ctx.fillRect(-GOAL_WIDTH / 2, GOAL_HEIGHT / 2 - 3, GOAL_WIDTH, 3);
 
-    ctx.beginPath();
-    ctx.rect(-goalWidth / 2, -goalHeight / 2, 3, goalHeight);
-    ctx.fillStyle = "white";
-    ctx.fill();
-    ctx.closePath();
-
-    ctx.beginPath();
-    ctx.rect(-goalWidth / 2, goalHeight / 2 - 3, goalWidth, 3);
-    ctx.fillStyle = "white";
-    ctx.fill();
-    ctx.closePath();
-
+    // Kaleci (kale çizgisinde, topa doğru kayar)
+    ctx.fillStyle = "#FFD400";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(GOAL_WIDTH / 2 - 8, keeper.pos - KEEPER_SIZE / 2, 7, KEEPER_SIZE);
+    ctx.strokeRect(GOAL_WIDTH / 2 - 8, keeper.pos - KEEPER_SIZE / 2, 7, KEEPER_SIZE);
 
     ctx.restore();
 }
 
-function updateGoalAngle() {
-    // Kaleyi her zaman orijine bakacak şekilde döndür
-    let angleToOrigin = Math.atan2(goal.y - 200, goal.x - 200);
-    goal.angle = angleToOrigin * 180 / Math.PI;  // Açıyı dereceye çevir
-}
-
-function updateScore(scorer = null) {
-    // Temel skor güncellemesi
-    document.getElementById("score").innerText = `${score[0]} - ${score[1]}`;
-
-    // Eğer golü atan belirtilmemişse sadece skoru güncelle ve çık
-    if (!scorer) return;
-
-    // Gol geçmişini güncelle
-    const goalHistory = document.getElementById("goal-history");
-
-    // Yeni gol kaydını oluştur
-    const goalEntry = document.createElement("p");
-    goalEntry.style.margin = "5px 0";
-    goalEntry.style.textAlign = "left";
-    goalEntry.style.padding = "5px 10px";
-    goalEntry.classList.add("goal-entry-anim");
-
-    // Golü atan takımın tam adını bul
-    let scorerTeamName = "";
-    let scorerColor = "#ffffff";
-    for (let teamId in teamsDatabase) {
-        if (teamsDatabase[teamId].initial === scorer) {
-            scorerTeamName = teamsDatabase[teamId].name;
-            scorerColor = teamsDatabase[teamId].colors[0];
-            break;
+function drawEffects() {
+    if (collisionEffects.length > 0) {
+        ctx.beginPath();
+        for (const effect of collisionEffects) {
+            ctx.moveTo(effect.x + effect.radius, effect.y);
+            ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
         }
+        ctx.strokeStyle = "rgba(255,204,0,0.5)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
     }
 
-    goalEntry.innerHTML = `${time}' ${scorerTeamName} scores!`;
-    goalHistory.appendChild(goalEntry);
-    
-    // Otomatik olarak en alta kaydır
-    goalHistory.scrollTop = goalHistory.scrollHeight;
+    // Gol parçacıkları: gölge yerine arkasına büyük yarı saydam bir hale çizilir
+    for (const p of goalParticles) {
+        const alpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = alpha * 0.3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
-    // Pulse the scoreboard
-    let scoreSpan = document.getElementById("score");
-    scoreSpan.style.setProperty('--pulse-color', scorerColor);
-    scoreSpan.classList.remove("score-pulse");
-    void scoreSpan.offsetWidth; // trigger reflow
-    scoreSpan.classList.add("score-pulse");
+    // "SAVE!", "POST!" yazıları
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
+    for (const t of floatingTexts) {
+        ctx.globalAlpha = Math.max(0, t.alpha);
+        ctx.fillStyle = t.color;
+        ctx.strokeText(t.text, t.x, t.y);
+        ctx.fillText(t.text, t.x, t.y);
+    }
+    ctx.globalAlpha = 1;
+}
+
+// Sahayı karartıp ortaya büyük bir yazı (ve altına küçük bir satır) yazar
+function drawBanner(title, subtitle, scale) {
+    ctx.fillStyle = "rgba(5, 10, 18, 0.45)";
+    ctx.beginPath();
+    ctx.arc(CENTER, CENTER, WORLD_SIZE / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(CENTER, CENTER - (subtitle ? 10 : 0));
+    ctx.scale(scale, scale);
+    ctx.font = "800 46px Inter, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.strokeText(title, 0, 0);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(title, 0, 0);
+    ctx.restore();
+
+    if (subtitle) {
+        ctx.font = "600 18px Inter, Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fillText(subtitle, CENTER, CENTER + 30);
+    }
+}
+
+function drawCelebration() {
+    const t = celebration.elapsed / 1000;
+    const team = celebration.team;
+
+    // Takım renginde kısa bir flaş
+    if (t < 0.5) {
+        ctx.globalAlpha = 0.35 * (1 - t / 0.5);
+        ctx.fillStyle = team.color[0] === "#FFFFFF" ? team.color[1] : team.color[0];
+        ctx.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
+        ctx.globalAlpha = 1;
+    }
+
+    // Konfeti
+    for (const piece of confetti) {
+        ctx.save();
+        ctx.translate(piece.x, piece.y);
+        ctx.rotate(piece.rotation);
+        ctx.fillStyle = piece.color;
+        ctx.fillRect(-piece.w / 2, -piece.h / 2, piece.w, piece.h);
+        ctx.restore();
+    }
+
+    // "GOAL!" yazısı büyükten oturur, altında golü atan takımın topu
+    const pop = t < 0.3 ? 1.8 - (t / 0.3) * 0.8 : 1;
+    ctx.save();
+    ctx.translate(CENTER, CENTER - 24);
+    ctx.scale(pop, pop);
+    ctx.font = "800 64px Inter, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.strokeText("GOAL!", 0, 0);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("GOAL!", 0, 0);
+    ctx.restore();
+
+    if (t > 0.25) {
+        const sprite = team.sprite;
+        const size = sprite.size * 0.9;
+        ctx.globalAlpha = Math.min(1, (t - 0.25) / 0.3);
+        ctx.drawImage(sprite.canvas, CENTER - size / 2, CENTER + 42 - size / 2, size, size);
+        ctx.globalAlpha = 1;
+    }
+}
+
+function render() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(renderScale, 0, 0, renderScale, 0, 0);
+
+    if (shakeAmount > 0) {
+        ctx.translate((Math.random() - 0.5) * shakeAmount, (Math.random() - 0.5) * shakeAmount);
+    }
+
+    if (fieldLayer) ctx.drawImage(fieldLayer.canvas, 0, 0, WORLD_SIZE, WORLD_SIZE);
+    if (gameState === "idle") return;
+
+    drawGoal();
+    drawTeams();
+    drawEffects();
+
+    if (gameState === "countdown") {
+        const remaining = Math.ceil(stateTimer / 1000);
+        const fraction = (stateTimer % 1000) / 1000;
+        drawBanner(String(remaining), "Get ready", 0.8 + fraction * 0.5);
+    } else if (gameState === "goalPause" && celebration) {
+        drawCelebration();
+    } else if (gameState === "halftime") {
+        drawBanner("HALF-TIME", `${team1.initial} ${score[0]} - ${score[1]} ${team2.initial}`, 1);
+    } else if (gameState === "ended" && !goalParticles.length) {
+        drawBanner("FULL-TIME", `${team1.initial} ${score[0]} - ${score[1]} ${team2.initial}`, 1);
+    }
+}
+
+// ---------- Simülasyon ----------
+
+function step() {
+    if (gameState === "countdown") {
+        stateTimer -= STEP_MS;
+        if (stateTimer <= 0) {
+            gameState = "playing";
+            Sound.whistle("start");
+            addEvent("kickoff");
+        }
+    } else if (gameState === "playing") {
+        updatePositions();
+        if (gameState !== "playing") return; // gol oldu
+
+        updatePressure();
+        minuteTimer += STEP_MS;
+        if (minuteTimer >= MS_PER_MINUTE) {
+            minuteTimer -= MS_PER_MINUTE;
+            tickClock();
+        }
+    } else if (gameState === "goalPause") {
+        stateTimer -= STEP_MS;
+        if (celebration) celebration.elapsed += STEP_MS;
+        if (stateTimer <= 0) {
+            celebration = null;
+            confetti = [];
+            resetPositions();
+            gameState = "playing";
+        }
+    } else if (gameState === "halftime") {
+        stateTimer -= STEP_MS;
+        if (stateTimer <= 0) startSecondHalf();
+    }
+
+    updateEffects();
+}
+
+// Top kaleye hangi takımınki daha yakınsa baskı o takımda
+function updatePressure() {
+    const d1 = Math.hypot(team1.x - goal.x, team1.y - goal.y);
+    const d2 = Math.hypot(team2.x - goal.x, team2.y - goal.y);
+    stats[d1 < d2 ? 0 : 1].pressure++;
+    if (++pressureSteps % 30 === 0) uiStatsChanged();
 }
 
 function updatePositions() {
-    // Topların hareketini güncelliyoruz
-    [team1, team2].forEach(team => {
-        if (!team.history) team.history = [];
+    for (const team of [team1, team2]) {
         team.history.unshift({ x: team.x, y: team.y });
-        if (team.history.length > 15) team.history.pop();
+        if (team.history.length > TRAIL_LENGTH) team.history.pop();
+
+        // Falso: top kavis çizerek ilerler, falso giderek azalır
+        if (team.spin) {
+            rotateVelocity(team, team.spin);
+            team.spin *= SPIN_DECAY;
+        }
+
+        // Sürtünme: taban hızın üstündeki fazlalık yavaş yavaş erir
+        const speed = Math.hypot(team.dx, team.dy);
+        setSpeed(team, BASE_SPEED + (speed - BASE_SPEED) * FRICTION);
 
         team.x += team.dx;
         team.y += team.dy;
 
-        // Yalnızca hız limiti kontrolü, rastgele "rüzgar" efekti kaldırıldı
-        let speed = Math.hypot(team.dx, team.dy);
-        if (speed > 2.5) {
-            team.dx = (team.dx / speed) * 2.5;
-            team.dy = (team.dy / speed) * 2.5;
-        } else if (speed < 1.0 && speed > 0) {
-            team.dx = (team.dx / speed) * 1.0;
-            team.dy = (team.dy / speed) * 1.0;
+        // Top kenara değdi mi?
+        const distanceToCenter = Math.hypot(team.x - CENTER, team.y - CENTER);
+        if (distanceToCenter < BOUNCE_RADIUS) continue;
+
+        const nx = (team.x - CENTER) / distanceToCenter;
+        const ny = (team.y - CENTER) / distanceToCenter;
+        const hitX = CENTER + nx * FIELD_RADIUS;
+        const hitY = CENTER + ny * FIELD_RADIUS;
+
+        const result = checkGoalHit(hitX, hitY);
+        if (result) {
+            stats[team.index].shots++;
+            if (result !== "post") stats[team.index].onTarget++;
+            else stats[team.index].posts++;
+            uiStatsChanged();
         }
 
-        let distance = Math.hypot(team.x - goal.x, team.y - goal.y);
-        if (distance < 25 && Math.random() < 0.4) {
-            if (team === team1) {
-                score[0]++;
-                updateScore(team1.initial);
-            } else {
-                score[1]++;
-                updateScore(team2.initial);
-            }
-
-            goalSound.play();
-
-            shakeAmount = 15;
-            createGoalExplosion(goal.x, goal.y, team.color);
-
-            isPaused = true;
-
-            // Kısa bir beklemeden sonra oyunu devam ettiriyoruz
-            setTimeout(() => {
-                resetPositions();
-                if (time < 90) { // Süre bitmemişse oyunu devam ettir
-                    isPaused = false;
-                } else {
-                    gameRunning = false;
-                }
-            }, 3000);
+        if (result === "goal") {
+            // Topu ağlara yerleştir
+            team.x = CENTER + nx * (FIELD_RADIUS - BALL_RADIUS * 0.5);
+            team.y = CENTER + ny * (FIELD_RADIUS - BALL_RADIUS * 0.5);
+            scoreGoal(team);
+            return;
         }
 
-        // Sahadan çıkmasını engelliyoruz ve çemberden yansıtıyoruz
-        let centerX = canvas.width / 2;
-        let centerY = canvas.height / 2;
-        let distanceToCenter = Math.hypot(team.x - centerX, team.y - centerY);
+        bounceOffWall(team, nx, ny);
+        team.x = CENTER + nx * (BOUNCE_RADIUS - 1);
+        team.y = CENTER + ny * (BOUNCE_RADIUS - 1);
 
-        if (distanceToCenter >= goalRadius) {
-            let nx = (team.x - centerX) / distanceToCenter;
-            let ny = (team.y - centerY) / distanceToCenter;
-
-            let dotProduct = team.dx * nx + team.dy * ny;
-
-            if (dotProduct > 0) {
-                team.dx = team.dx - 2 * dotProduct * nx + (Math.random() - 0.5);
-                team.dy = team.dy - 2 * dotProduct * ny + (Math.random() - 0.5);
-                team.dx *= 1.05;
-                team.dy *= 1.05;
-            }
-
-            team.x = centerX + nx * (goalRadius - 1);
-            team.y = centerY + ny * (goalRadius - 1);
-
-            addCollisionEffect(team.x, team.y, "wall");
+        if (result === "save") {
+            addFloatingText("SAVE!", hitX, hitY, "#FFD400");
+            addCollisionEffect(hitX, hitY, "ball");
+            addEvent("save", team);
+            Sound.swell(0.03, 1);
+        } else if (result === "post") {
+            addFloatingText("POST!", hitX, hitY, "#FFFFFF");
+            addCollisionEffect(hitX, hitY, "ball");
+            shakeAmount = Math.max(shakeAmount, 4);
+            addEvent("post", team);
+            Sound.tick(2.5);
+            Sound.swell(0.05, 1.2);
+        } else {
+            addCollisionEffect(hitX, hitY, "wall");
         }
-    });
-
-    // Kalenin yönünü orijine bakacak şekilde güncelliyoruz
-    updateGoalAngle();
+    }
 
     handleCollision(team1, team2);
-    goal.angle += goal.speed;
+
+    // Kale saha çemberi üzerinde dönüyor, kaleci topu takip ediyor
+    goal.angle = (goal.angle + goal.speed) % 360;
+    updateGoalPosition();
+    updateKeeper();
+}
+
+function bounceOffWall(team, nx, ny) {
+    const dot = team.dx * nx + team.dy * ny;
+    if (dot <= 0) return;
+
+    // Yansıt
+    team.dx -= 2 * dot * nx;
+    team.dy -= 2 * dot * ny;
+
+    // Yönü rastgele saptır ki top hep aynı yolları çizmesin (sahanın içine doğru kalarak)
+    const speed = Math.hypot(team.dx, team.dy);
+    const deflection = randomBetween(-0.6, 0.6);
+    rotateVelocity(team, deflection);
+    if (team.dx * nx + team.dy * ny > -0.3 * speed) {
+        rotateVelocity(team, -2 * deflection);
+    }
+
+    team.spin = randomBetween(-SPIN_MAX, SPIN_MAX);
+    setSpeed(team, speed * WALL_BOOST);
+}
+
+// Kale ekseninde bir noktanın kale merkezine göre yan konumu
+function offsetAlongGoal(x, y) {
+    const radian = (goal.angle * Math.PI) / 180;
+    return (x - goal.x) * Math.sin(radian) - (y - goal.y) * Math.cos(radian);
+}
+
+// Top duvara (hitX, hitY) noktasında çarptı: gol mü, kurtarış mı, direk mi?
+function checkGoalHit(hitX, hitY) {
+    const hitAngle = Math.atan2(hitY - CENTER, hitX - CENTER);
+    const goalAngle = (goal.angle * Math.PI) / 180;
+    const reach = (GOAL_HEIGHT / 2 + BALL_RADIUS) / FIELD_RADIUS;
+    if (angleDifference(hitAngle, goalAngle) > reach) return null;
+
+    const offset = offsetAlongGoal(hitX, hitY);
+    if (Math.abs(offset) < GOAL_HEIGHT / 2) {
+        const saved = Math.abs(offset - keeper.pos) < KEEPER_SIZE / 2 + BALL_RADIUS * 0.35;
+        return saved ? "save" : "goal";
+    }
+    if (Math.abs(offset) < GOAL_HEIGHT / 2 + BALL_RADIUS * 0.5) return "post";
+    return null;
+}
+
+function updateKeeper() {
+    // Kaleye en yakın topu takip et
+    const nearest = [team1, team2].reduce((a, b) =>
+        Math.hypot(a.x - goal.x, a.y - goal.y) < Math.hypot(b.x - goal.x, b.y - goal.y) ? a : b);
+    const limit = (GOAL_HEIGHT - KEEPER_SIZE) / 2;
+    const target = Math.max(-limit, Math.min(limit, offsetAlongGoal(nearest.x, nearest.y)));
+    const move = Math.max(-KEEPER_SPEED, Math.min(KEEPER_SPEED, target - keeper.pos));
+    keeper.pos += move;
+}
+
+function updateGoalPosition() {
+    let radian = (goal.angle * Math.PI) / 180;
+    goal.x = CENTER + Math.cos(radian) * FIELD_RADIUS;
+    goal.y = CENTER + Math.sin(radian) * FIELD_RADIUS;
+}
+
+function scoreGoal(team) {
+    score[team.index]++;
+    matchGoals.push({ team: team.index, minute: clockLabel() });
+    addEvent("goal", team);
+    uiScoreChanged(team.index);
+
+    Sound.goal();
+
+    shakeAmount = 15;
+    createGoalExplosion(goal.x, goal.y, team.color);
+    createConfetti(team.color);
+    celebration = { team: team, elapsed: 0 };
+
+    // Kutlamadan sonra oyun devam eder (step içinde)
+    gameState = "goalPause";
+    stateTimer = GOAL_PAUSE_MS;
+}
+
+function updateEffects() {
+    for (let i = collisionEffects.length - 1; i >= 0; i--) {
+        let effect = collisionEffects[i];
+        effect.radius += 0.7;
+        effect.alpha -= 0.05;
+        if (effect.alpha <= 0) collisionEffects.splice(i, 1);
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const t = floatingTexts[i];
+        t.y -= 0.6;
+        t.alpha -= 0.02;
+        if (t.alpha <= 0) floatingTexts.splice(i, 1);
+    }
+
+    for (let i = goalParticles.length - 1; i >= 0; i--) {
+        let p = goalParticles[i];
+        p.x += p.dx;
+        p.y += p.dy;
+        p.life -= p.decay;
+        if (p.life <= 0) goalParticles.splice(i, 1);
+    }
+
+    for (const piece of confetti) {
+        piece.x += piece.dx + Math.sin(piece.y * 0.05) * 0.4;
+        piece.y += piece.dy;
+        piece.rotation += piece.spin;
+    }
+
+    if (shakeAmount > 0) {
+        shakeAmount *= 0.9;
+        if (shakeAmount < 0.5) shakeAmount = 0;
+    }
 }
 
 function resetPositions() {
     team1.history = [];
     team2.history = [];
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    // Toplar sahanın farklı yerlerinden, farklı yönlere başlar
+    placeRandomly(team1, Math.PI);
+    do {
+        placeRandomly(team2, 0);
+    } while (Math.hypot(team1.x - team2.x, team1.y - team2.y) < BALL_RADIUS * 2 + 10);
 
-    let randomOffsetY1 = (Math.random() - 0.5) * 80;
-    let randomOffsetY2 = (Math.random() - 0.5) * 80;
-
-    team1.x = centerX - 40;
-    team1.y = centerY + randomOffsetY1;
-    team1.dx = getRandomSpeed();
-    team1.dy = getRandomSpeed();
-
-    team2.x = centerX + 40;
-    team2.y = centerY + randomOffsetY2;
-    team2.dx = getRandomSpeed();
-    team2.dy = getRandomSpeed();
-
-    goal.angle = 0;
+    goal.angle = Math.random() * 360;
+    updateGoalPosition();
+    keeper.pos = 0;
 }
 
-// Çarpışma efekti için değişkenler
-let collisionEffects = [];
+// Topu sahanın bir yarısında rastgele bir noktaya koyar ve rastgele bir yöne gönderir
+function placeRandomly(team, sideAngle) {
+    const angle = sideAngle + randomBetween(-1.2, 1.2);
+    const distance = randomBetween(20, 100);
+    team.x = CENTER + Math.cos(angle) * distance;
+    team.y = CENTER + Math.sin(angle) * distance;
+
+    const direction = Math.random() * Math.PI * 2;
+    const speed = randomBetween(BASE_SPEED, BASE_SPEED * 1.6);
+    team.dx = Math.cos(direction) * speed;
+    team.dy = Math.sin(direction) * speed;
+    team.spin = randomBetween(-SPIN_MAX, SPIN_MAX);
+}
+
+function addFloatingText(text, x, y, color) {
+    // Yazı sahanın biraz içinde çıksın
+    floatingTexts.push({
+        text: text,
+        x: CENTER + (x - CENTER) * 0.75,
+        y: CENTER + (y - CENTER) * 0.75,
+        alpha: 1.0,
+        color: color
+    });
+}
 
 function addCollisionEffect(x, y, type) {
-    let effect = {
+    collisionEffects.push({
         x: x,
         y: y,
-        type: type, // "wall" veya "ball"
         radius: type === "wall" ? 5 : 10,
-        alpha: 1.0,
-        color: type === "wall" ? "#ffffff" : "#ffcc00"
-    };
-    collisionEffects.push(effect);
-}
-
-function updateAndDrawEffects() {
-    ctx.beginPath();
-    for (let i = collisionEffects.length - 1; i >= 0; i--) {
-        let effect = collisionEffects[i];
-        effect.radius += 0.7;
-        effect.alpha -= 0.05;
-
-        ctx.moveTo(effect.x + effect.radius, effect.y);
-        ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
-
-        if (effect.alpha <= 0) {
-            collisionEffects.splice(i, 1);
-        }
-    }
-
-    if (collisionEffects.length > 0) {
-        ctx.strokeStyle = `rgba(255,204,0,0.5)`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-
-    // Draw goal particles
-    for (let i = goalParticles.length - 1; i >= 0; i--) {
-        let p = goalParticles[i];
-        p.x += p.dx;
-        p.y += p.dy;
-        p.life -= p.decay;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.life);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = p.color;
-        ctx.fill();
-        ctx.restore();
-
-        if (p.life <= 0) goalParticles.splice(i, 1);
-    }
+        alpha: 1.0
+    });
 }
 
 function createGoalExplosion(x, y, colors) {
@@ -511,150 +950,109 @@ function createGoalExplosion(x, y, colors) {
     }
 }
 
-// Oyun değişkenleri arasına bu değişkenleri ekleyelim
-let minDeflectionAngle = 0.15;  // Minimum sapma açısı (radyan)
-let maxDeflectionAngle = 0.65;  // Maksimum sapma açısı (radyan)
+// Takım renklerinde, yukarıdan yağan konfeti
+function createConfetti(colors) {
+    const palette = [...colors, "#FFFFFF"];
+    confetti = [];
+    for (let i = 0; i < 70; i++) {
+        confetti.push({
+            x: Math.random() * WORLD_SIZE,
+            y: -Math.random() * 200,
+            dx: randomBetween(-0.6, 0.6),
+            dy: randomBetween(1.8, 3.6),
+            w: randomBetween(4, 7),
+            h: randomBetween(8, 12),
+            rotation: Math.random() * Math.PI,
+            spin: randomBetween(-0.15, 0.15),
+            color: palette[i % palette.length]
+        });
+    }
+}
 
 function handleCollision(ball1, ball2) {
-    let dx = ball2.x - ball1.x;
-    let dy = ball2.y - ball1.y;
-    let distance = Math.hypot(dx, dy);
-    let minDistance = ballRadius * 2;
+    const dx = ball2.x - ball1.x;
+    const dy = ball2.y - ball1.y;
+    const distance = Math.hypot(dx, dy) || 0.01;
+    const minDistance = BALL_RADIUS * 2;
+    if (distance >= minDistance) return;
 
-    if (distance < minDistance) {
-        // Çarpışma başına rastgele sapma açıları üret
-        // Her çarpışmada farklı açılar kullanarak hareketin doğrusallığını kır
-        let random1 = minDeflectionAngle + Math.random() * (maxDeflectionAngle - minDeflectionAngle);
-        let random2 = minDeflectionAngle + Math.random() * (maxDeflectionAngle - minDeflectionAngle);
+    const nx = dx / distance;
+    const ny = dy / distance;
 
-        // Açıları pozitif veya negatif yapma şansı
-        random1 *= Math.random() > 0.5 ? 1 : -1;
-        random2 *= Math.random() > 0.5 ? 1 : -1;
+    // Topları birbirinden uzaklaştır (çakışmayı önle)
+    const overlap = (minDistance - distance) / 2;
+    ball1.x -= nx * overlap;
+    ball1.y -= ny * overlap;
+    ball2.x += nx * overlap;
+    ball2.y += ny * overlap;
 
-        // Çarpışma açısını hesapla
-        let angle = Math.atan2(dy, dx);
+    // Sadece birbirlerine yaklaşıyorlarsa çarpıştır (bilardo gibi)
+    const approach = (ball2.dx - ball1.dx) * nx + (ball2.dy - ball1.dy) * ny;
+    if (approach >= 0) return;
 
-        // Hızların büyüklüğünü hesapla
-        let speed1 = Math.hypot(ball1.dx, ball1.dy);
-        let speed2 = Math.hypot(ball2.dx, ball2.dy);
+    // Eşit kütleli esnek çarpışma: çarpışma doğrultusundaki hızlar yer değiştirir
+    ball1.dx += approach * nx;
+    ball1.dy += approach * ny;
+    ball2.dx -= approach * nx;
+    ball2.dy -= approach * ny;
 
-        // Yeni hızları ata - dinamik açı eklemeli
-        ball1.dx = Math.cos(angle + Math.PI + random1) * speed1 * 1.05;
-        ball1.dy = Math.sin(angle + Math.PI + random1) * speed1 * 1.05;
-
-        ball2.dx = Math.cos(angle + random2) * speed2 * 1.05;
-        ball2.dy = Math.sin(angle + random2) * speed2 * 1.05;
-
-        // Sabit çarpışma döngüsünden kaçınmak için hafif rastgele sapma
-        ball1.dx += (Math.random() - 0.5) * 0.4;
-        ball1.dy += (Math.random() - 0.5) * 0.4;
-        ball2.dx += (Math.random() - 0.5) * 0.4;
-        ball2.dy += (Math.random() - 0.5) * 0.4;
-
-        // Topları birbirinden uzaklaştır (çakışmayı önle)
-        let overlap = minDistance - distance;
-        let adjustX = (overlap * dx) / distance * 0.5;
-        let adjustY = (overlap * dy) / distance * 0.5;
-
-        ball1.x -= adjustX;
-        ball1.y -= adjustY;
-        ball2.x += adjustX;
-        ball2.y += adjustY;
-
-        // Top çarpışma efekti ekle
-        let collisionX = (ball1.x + ball2.x) / 2;
-        let collisionY = (ball1.y + ball2.y) / 2;
-        addCollisionEffect(collisionX, collisionY, "ball");
+    // Biraz rastgelelik, falso ve hızlanma
+    for (const ball of [ball1, ball2]) {
+        rotateVelocity(ball, randomBetween(-0.25, 0.25));
+        ball.spin = randomBetween(-SPIN_MAX, SPIN_MAX) * 1.5;
+        setSpeed(ball, Math.hypot(ball.dx, ball.dy) * BALL_BOOST);
     }
+
+    const impactX = (ball1.x + ball2.x) / 2;
+    const impactY = (ball1.y + ball2.y) / 2;
+    addCollisionEffect(impactX, impactY, "ball");
+    shakeAmount = Math.max(shakeAmount, Math.min(6, -approach));
+    Sound.tick(-approach / 3);
 }
 
-function updateTime() {
-    if (isPaused) return;
-    if (time < 90) {
-        time++;
-        document.getElementById("time").innerText = `${time}`;
-    } else {
-        // 90. dakikada oyunu durduruyoruz
-        clearInterval(timeInterval);
-        gameRunning = false;
-        whistleSound.play();
-    }
-}
+// ---------- Oyun döngüsü ----------
 
-function gameLoop() {
-    if (!gameRunning && !isPaused) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.save();
-    if (shakeAmount > 0) {
-        let dx = (Math.random() - 0.5) * shakeAmount;
-        let dy = (Math.random() - 0.5) * shakeAmount;
-        ctx.translate(dx, dy);
-        shakeAmount *= 0.9;
-        if (shakeAmount < 0.5) shakeAmount = 0;
-    }
-
-    // Draw field circle with dynamic radius based on canvas size
-    const fieldRadius = Math.min(canvas.width, canvas.height) * 0.45;
-    ctx.save();
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "#00FFFF"; // Neon cyan
-    ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, fieldRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.restore();
-
-    drawGoal();
-    drawTeams();
-    if (!isPaused) {
-        updatePositions();
-    }
-    updateAndDrawEffects(); // Efektleri çiz
-
-    ctx.restore();
+function startLoop() {
+    if (loopRunning) return;
+    loopRunning = true;
+    lastFrameTime = performance.now();
+    accumulator = 0;
     requestAnimationFrame(gameLoop);
 }
 
-// Add this new function to handle responsive canvas
-function resizeCanvas() {
-    const isMobile = window.innerWidth <= 768;
+function gameLoop(now) {
+    // Sekme arka plandan dönünce dev bir zaman atlaması olmasın
+    accumulator += Math.min(now - lastFrameTime, STEP_MS * MAX_STEPS_PER_FRAME);
+    lastFrameTime = now;
 
-    if (isMobile) {
-        // On mobile, make the canvas square and fit the viewport width
-        const size = Math.min(window.innerWidth * 0.95, 400);
-        canvas.width = size;
-        canvas.height = size;
+    while (accumulator >= STEP_MS) {
+        step();
+        accumulator -= STEP_MS;
+    }
 
-        // Adjust game elements for the new canvas size
-        goalRadius = size * 0.45;  // 45% of canvas size
-        ballRadius = size * 0.075; // 7.5% of canvas size
-        goalWidth = size * 0.0625; // 6.25% of canvas size  
-        goalHeight = size * 0.175; // 17.5% of canvas size
+    render();
+
+    // Maç bitip efektler sönünce döngüyü durdur
+    const animating = gameState !== "ended" ||
+        collisionEffects.length > 0 || goalParticles.length > 0 || floatingTexts.length > 0 || shakeAmount > 0;
+    if (animating) {
+        requestAnimationFrame(gameLoop);
     } else {
-        // On desktop, use original dimensions
-        canvas.width = 400;
-        canvas.height = 400;
-        goalRadius = 180;
-        ballRadius = 30;
-        goalWidth = 25;
-        goalHeight = 70;
+        loopRunning = false;
     }
 }
 
-// Add window resize event listener
-window.addEventListener('resize', function () {
-    if (gameRunning) {
-        // If game is running, handle resize
-        resizeCanvas();
-    }
+// Ekran döndürme / boyut değişiminde canvas'ı yeniden boyutlandır
+let resizeFrame = 0;
+window.addEventListener("resize", function () {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(resizeCanvas);
 });
 
+resizeCanvas();
+
 window.addEventListener("load", function () {
-    loadAllTeams().then(() => {
-        console.log("Tüm takımlar yüklendi!");
-    }).catch(error => {
+    loadAllTeams().catch(error => {
         console.error("Takımlar yüklenirken hata oluştu:", error);
     });
 });
