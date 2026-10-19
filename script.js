@@ -69,7 +69,7 @@ let accumulator = 0;
 // Ekran ölçeği ve önceden çizilmiş katmanlar
 let renderScale = 1;
 let fieldLayer = null;
-let fieldBadge = null;      // { image, fit: "crop" | "contain" }
+let fieldBadge = null;      // { image, background, scale } sahanın ortasındaki lig logosu
 
 // Takımlar (json/teams.json) ve bu sezonun lig/turnuva listeleri (json/competitions.json)
 let teamsDatabase = {};
@@ -300,15 +300,14 @@ function createLayer(worldSize) {
     return { canvas: layer, ctx: layerCtx, size: worldSize };
 }
 
-// Lige göre sahanın ortasındaki logo. Lig resimlerinin ortasındaki yuvarlak kırpılır;
-// competitions.json'da "badge" verilmişse o resim olduğu gibi kullanılır.
+// Lige göre sahanın ortasındaki logo (competitions.json: badge, badgeBg, badgeScale).
+// Lig seçilmemişse RotaScore logosu.
 function setFieldTheme(competition) {
-    const file = competition ? (competition.badge || competition.background) : "rota.png";
-    const fit = competition && competition.badge ? "contain" : "crop";
+    const theme = competition || { badge: "favicon.png", badgeScale: 1 };
     const image = new Image();
-    image.src = `./img/${file}`;
+    image.src = `./img/${theme.badge}`;
     image.decode().then(() => {
-        fieldBadge = { image: image, fit: fit };
+        fieldBadge = { image: image, background: theme.badgeBg || null, scale: theme.badgeScale || 0.78 };
         fieldLayer = createFieldLayer();
         if (!loopRunning) render();
     }).catch(() => {});
@@ -365,16 +364,16 @@ function createFieldLayer() {
         c.beginPath();
         c.arc(CENTER, CENTER, BADGE_RADIUS, 0, Math.PI * 2);
         c.clip();
-        if (fieldBadge.fit === "crop") {
-            const r = image.naturalWidth * 0.185;
-            c.drawImage(image, image.naturalWidth / 2 - r, image.naturalHeight / 2 - r, r * 2, r * 2,
-                CENTER - BADGE_RADIUS, CENTER - BADGE_RADIUS, BADGE_RADIUS * 2, BADGE_RADIUS * 2);
-        } else {
-            c.fillStyle = "#000000";
+        if (fieldBadge.background) {
+            c.fillStyle = fieldBadge.background;
             c.fillRect(CENTER - BADGE_RADIUS, CENTER - BADGE_RADIUS, BADGE_RADIUS * 2, BADGE_RADIUS * 2);
-            const size = BADGE_RADIUS * 2.1;
-            c.drawImage(image, CENTER - size / 2, CENTER - size / 2, size, size);
         }
+        // Logo, en-boy oranı korunarak yuvarlağın ortasına sığdırılır
+        const box = BADGE_RADIUS * 2 * fieldBadge.scale;
+        const ratio = Math.min(box / image.naturalWidth, box / image.naturalHeight);
+        const width = image.naturalWidth * ratio;
+        const height = image.naturalHeight * ratio;
+        c.drawImage(image, CENTER - width / 2, CENTER - height / 2, width, height);
         c.restore();
     }
 

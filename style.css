@@ -468,7 +468,7 @@ select optgroup {
 
 .fixture {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: 10px;
     width: 100%;
@@ -488,13 +488,6 @@ select optgroup {
 
 .fixture:active {
     transform: scale(0.98);
-}
-
-.fixture-time {
-    font-weight: 800;
-    font-size: 13px;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
 }
 
 .fixture-teams {

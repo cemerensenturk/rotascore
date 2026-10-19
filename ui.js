@@ -681,10 +681,6 @@ function renderToday(data) {
         fixture.className = "fixture";
         fixture.addEventListener("click", () => playFixture(match));
 
-        const time = document.createElement("span");
-        time.className = "fixture-time";
-        time.textContent = new Date(match.kickoff).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-
         const teamsColumn = document.createElement("span");
         teamsColumn.className = "fixture-teams";
         for (const side of [match.home, match.away]) {
@@ -702,7 +698,7 @@ function renderToday(data) {
         play.setAttribute("aria-hidden", "true");
         play.textContent = "▶";
 
-        fixture.append(time, teamsColumn, play);
+        fixture.append(teamsColumn, play);
         fixture.setAttribute("aria-label", `Play ${teamData(match.home.id).name} vs ${teamData(match.away.id).name}`);
         list.appendChild(fixture);
     }

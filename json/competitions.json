@@ -5,7 +5,9 @@
       "id": "premier-league",
       "name": "Premier League",
       "type": "league",
-      "background": "pl.png",
+      "badge": "leagues/premier-league.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "arsenal", "aston-villa", "bournemouth", "brentford", "brighton-and-hove-albion", "chelsea",
         "coventry-city", "crystal-palace", "everton", "fulham", "hull-city", "ipswich-town",
@@ -17,7 +19,9 @@
       "id": "la-liga",
       "name": "La Liga",
       "type": "league",
-      "background": "ll.png",
+      "badge": "leagues/la-liga.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "alaves", "athletic-bilbao", "atletico-madrid", "barcelona", "celta-vigo", "deportivo-la-coruna",
         "elche", "espanyol", "getafe", "levante", "malaga", "osasuna",
@@ -29,7 +33,9 @@
       "id": "bundesliga",
       "name": "Bundesliga",
       "type": "league",
-      "background": "bl.png",
+      "badge": "leagues/bundesliga.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.64,
       "teams": [
         "augsburg", "union-berlin", "werder-bremen", "borussia-dortmund", "elversberg", "eintracht-frankfurt",
         "freiburg", "borussia-monchengladbach", "hamburger-sv", "hoffenheim", "koln", "rb-leipzig",
@@ -40,7 +46,9 @@
       "id": "serie-a",
       "name": "Serie A",
       "type": "league",
-      "background": "sa.png",
+      "badge": "leagues/serie-a.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.72,
       "teams": [
         "atalanta", "bologna", "cagliari", "como", "fiorentina", "frosinone",
         "genoa", "inter-milan", "juventus", "lazio", "lecce", "ac-milan",
@@ -52,7 +60,9 @@
       "id": "ligue-1",
       "name": "Ligue 1",
       "type": "league",
-      "background": "l1.png",
+      "badge": "leagues/ligue-1.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "angers", "auxerre", "brest", "le-havre", "le-mans", "lens",
         "lille", "lorient", "olympique-lyonnais", "marseille", "monaco", "nice",
@@ -63,7 +73,9 @@
       "id": "super-lig",
       "name": "Trendyol Süper Lig",
       "type": "league",
-      "background": "tsl.png",
+      "badge": "leagues/super-lig.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "galatasaray", "fenerbahce", "besiktas", "trabzonspor", "basaksehir", "samsunspor",
         "göztepe", "eyupspor", "gaziantep", "kasimpasa", "rizespor", "alanyaspor",
@@ -74,14 +86,16 @@
       "id": "others",
       "name": "Other Teams",
       "type": "others",
-      "background": "rota.png"
+      "badge": "favicon.png",
+      "badgeScale": 1.0
     },
     {
       "id": "worldcup",
       "name": "FIFA World Cup 2026",
       "type": "national",
-      "background": "fc26.png",
       "badge": "fifa2026.png",
+      "badgeBg": "#000000",
+      "badgeScale": 1.05,
       "teams": [
         "australia", "iran", "iraq", "japan", "jordan", "qatar",
         "saudi-arabia", "south-korea", "uzbekistan", "algeria", "cape-verde", "dr-congo",
@@ -97,7 +111,9 @@
       "id": "ucl",
       "name": "UEFA Champions League",
       "type": "cup",
-      "background": "ucl.png",
+      "badge": "leagues/ucl.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "paris-saint-germain", "bayern-munich", "real-madrid", "liverpool", "inter-milan", "manchester-city",
         "arsenal", "barcelona", "atletico-madrid", "borussia-dortmund", "as-roma", "sporting-lizbon",
@@ -111,7 +127,9 @@
       "id": "uel",
       "name": "UEFA Europa League",
       "type": "cup",
-      "background": "uel.png",
+      "badge": "leagues/uel.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "bayer-leverkusen", "benfica", "juventus", "ac-milan", "olympique-lyonnais", "az",
         "olympiakos", "real-sociedad", "marseille", "ferencvaros", "viktoria-plzen", "union-sg",
@@ -125,7 +143,9 @@
       "id": "uecl",
       "name": "UEFA Conference League",
       "type": "cup",
-      "background": "uecl.png",
+      "badge": "leagues/uecl.webp",
+      "badgeBg": "#FFFFFF",
+      "badgeScale": 0.78,
       "teams": [
         "atalanta", "braga", "ajax", "freiburg", "monaco", "kopenhag",
         "midtjylland", "crvena-zvezda", "gent", "panathinaikos", "pafos", "brighton-and-hove-albion",
