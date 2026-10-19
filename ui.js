@@ -4,6 +4,11 @@
 const $ = id => document.getElementById(id);
 
 let selection = { category: "all", home: null, away: null };
+let activeCompetition = null; // Oynanan maçın ligi (sonuç kartında yazar)
+
+// Günün maçları her sabah GitHub Actions ile güncellenir; site dosyayı doğrudan GitHub'dan okur
+const TODAY_URL = "https://raw.githubusercontent.com/cemerensenturk/rotascore/main/json/today.json";
+let todayMatches = [];
 
 // ---------- Kayıtlı seçim (bir sonraki ziyarette hatırlansın) ----------
 
@@ -42,9 +47,14 @@ function currentCompetition() {
     return competitions.find(c => c.id === selection.category) || null;
 }
 
+// Veritabanımızdaki takımlar (günün maçlarından gelen geçici takımlar hariç)
+function databaseTeams() {
+    return Object.keys(teamsDatabase).filter(id => !teamsDatabase[id].external);
+}
+
 function categoryTeams() {
     const competition = currentCompetition();
-    return competition ? competition.teams : Object.keys(teamsDatabase);
+    return competition ? competition.teams : databaseTeams();
 }
 
 // Bir takımın ait olduğu lig (arama sonuçlarında küçük etiket olarak gösterilir)
@@ -83,6 +93,7 @@ function onDataLoaded() {
     $("filter-category").value = selection.category;
     if ($("filter-category").value !== selection.category) selection.category = "all";
     applyCategory(selection.category);
+    loadToday();
 }
 
 function buildCategoryOptions() {
@@ -175,7 +186,7 @@ function renderPickerList() {
 
     // Arama varsa tüm takımlarda, yoksa seçili ligde
     const ids = query
-        ? sortByName(Object.keys(teamsDatabase).filter(id => normalize(teamData(id).name).includes(query)))
+        ? sortByName(databaseTeams().filter(id => normalize(teamData(id).name).includes(query)))
         : sortByName(categoryTeams());
 
     if (ids.length === 0) {
@@ -219,9 +230,10 @@ function pickTeam(id) {
 
 // ---------- Maç başlıyor ----------
 
-function kickOff() {
+function kickOff(competition) {
     if (!selection.home || !selection.away) return;
     if (gameState !== "idle" && gameState !== "ended") return;
+    activeCompetition = competition && competition.id ? competition : currentCompetition();
     Sound.unlock();
     closeSheet($("result"));
     startGame(selection.home, selection.away);
@@ -523,10 +535,9 @@ async function buildResultCard() {
     c.fillStyle = "#6AD04A";
     c.font = "800 34px Inter, Arial, sans-serif";
     c.fillText("FULL-TIME", size / 2, 110);
-    const competition = currentCompetition();
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 30px Inter, Arial, sans-serif";
-    c.fillText(competition ? competition.name : "Friendly", size / 2, 160);
+    c.fillText(activeCompetition ? activeCompetition.name : "Friendly", size / 2, 160);
 
     // Logolar ve skor
     await drawCardBadge(c, team1, 250, 430, 140);
@@ -595,13 +606,151 @@ function roundRect(c, x, y, w, h, r) {
     c.closePath();
 }
 
+// ---------- Günün maçları ----------
+
+async function loadToday() {
+    let data = null;
+    // Önce GitHub'daki güncel dosya, olmazsa sitedeki kopya
+    for (const url of [TODAY_URL, "./json/today.json"]) {
+        try {
+            const response = await fetch(url, { cache: "no-cache" });
+            if (response.ok) {
+                data = await response.json();
+                break;
+            }
+        } catch (error) {
+            // sıradaki kaynağı dene
+        }
+    }
+
+    todayMatches = data ? data.matches.filter(m => competitions.some(c => c.id === m.competition)) : [];
+    todayMatches.forEach(match => {
+        match.home.id = match.home.id && teamsDatabase[match.home.id] ? match.home.id : addExternalTeam(match.home.name);
+        match.away.id = match.away.id && teamsDatabase[match.away.id] ? match.away.id : addExternalTeam(match.away.name);
+    });
+
+    renderToday(data);
+    $("today-count").textContent = todayMatches.length || "";
+
+    // Bugün maç varsa ve kullanıcı en son takım seçimini kullanmadıysa "Today" açık gelsin
+    let savedTab = null;
+    try {
+        savedTab = localStorage.getItem("rotascore-tab");
+    } catch (error) {
+        // yoksay
+    }
+    if (todayMatches.length && savedTab !== "teams") showTab("today", false);
+}
+
+// Veritabanımızda olmayan takım: logosuz, nötr renkli bir top olarak oynanır
+function addExternalTeam(name) {
+    const id = `ext-${normalize(name).replace(/[^a-z0-9]+/g, "-")}`;
+    if (!teamsDatabase[id]) {
+        const letters = normalize(name).replace(/[^a-z]/g, "").toUpperCase();
+        teamsDatabase[id] = { name: name, initial: letters.slice(0, 3) || "???", colors: ["#3A4756", "#E8EEF5"], external: true };
+    }
+    return id;
+}
+
+function renderToday(data) {
+    const list = $("today-list");
+    list.innerHTML = "";
+
+    if (data && data.date) {
+        const date = new Date(`${data.date}T12:00:00`);
+        $("today-date").textContent = date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    }
+
+    if (!todayMatches.length) {
+        list.innerHTML = `<p class="empty">No featured matches today</p>`;
+        return;
+    }
+
+    let currentLeague = null;
+    for (const match of todayMatches) {
+        if (match.competition !== currentLeague) {
+            currentLeague = match.competition;
+            const heading = document.createElement("h3");
+            heading.className = "today-league";
+            heading.textContent = competitions.find(c => c.id === currentLeague).name;
+            list.appendChild(heading);
+        }
+
+        const fixture = document.createElement("button");
+        fixture.type = "button";
+        fixture.className = "fixture";
+        fixture.addEventListener("click", () => playFixture(match));
+
+        const time = document.createElement("span");
+        time.className = "fixture-time";
+        time.textContent = new Date(match.kickoff).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+        const teamsColumn = document.createElement("span");
+        teamsColumn.className = "fixture-teams";
+        for (const side of [match.home, match.away]) {
+            const row = document.createElement("span");
+            row.className = "fixture-team";
+            row.appendChild(teamBadge(side.id, "badge-xxs"));
+            const name = document.createElement("span");
+            name.textContent = teamData(side.id).name;
+            row.appendChild(name);
+            teamsColumn.appendChild(row);
+        }
+
+        const play = document.createElement("span");
+        play.className = "fixture-play";
+        play.setAttribute("aria-hidden", "true");
+        play.textContent = "▶";
+
+        fixture.append(time, teamsColumn, play);
+        fixture.setAttribute("aria-label", `Play ${teamData(match.home.id).name} vs ${teamData(match.away.id).name}`);
+        list.appendChild(fixture);
+    }
+}
+
+// Günün maçına dokununca o iki takımla maçı başlat
+function playFixture(match) {
+    if (gameState !== "idle" && gameState !== "ended") return;
+    const competition = competitions.find(c => c.id === match.competition);
+
+    // İki takım da o ligin listesindeyse lig seçimini de o lige çevir
+    if (competition.teams.includes(match.home.id) && competition.teams.includes(match.away.id)) {
+        selection.category = competition.id;
+        $("filter-category").value = competition.id;
+    }
+    setFieldTheme(competition);
+
+    selection.home = match.home.id;
+    selection.away = match.away.id;
+    saveSelection();
+    renderPickButtons();
+    kickOff(competition);
+}
+
+function showTab(name, remember) {
+    for (const tab of ["teams", "today"]) {
+        $(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
+        $(`panel-${tab}`).hidden = tab !== name;
+    }
+    if (remember) {
+        try {
+            localStorage.setItem("rotascore-tab", name);
+        } catch (error) {
+            // yoksay
+        }
+    }
+}
+
 // ---------- Olay dinleyicileri ----------
+
+$("tab-teams").addEventListener("click", () => showTab("teams", true));
+$("tab-today").addEventListener("click", () => showTab("today", true));
 
 $("filter-category").addEventListener("change", event => applyCategory(event.target.value));
 $("pick-home").addEventListener("click", () => openPicker("home"));
 $("pick-away").addEventListener("click", () => openPicker("away"));
-$("kickoff-btn").addEventListener("click", kickOff);
-$("rematch-btn").addEventListener("click", kickOff);
+$("kickoff-btn").addEventListener("click", () => kickOff());
+$("rematch-btn").addEventListener("click", () => kickOff(activeCompetition));
 $("share-btn").addEventListener("click", shareResult);
 $("download-btn").addEventListener("click", downloadResult);
 

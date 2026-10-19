@@ -1,0 +1,35 @@
+# Her sabah günün maçlarını çekip json/today.json olarak kaydeder.
+# Site bu dosyayı doğrudan GitHub'dan okur, FTP ile yüklemeye gerek yoktur.
+# Elle çalıştırmak için: GitHub > Actions > "Today's matches" > Run workflow
+name: Today's matches
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Her gün 03:00 UTC = 06:00 Türkiye
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch today's matches
+        run: node tools/fetch-today.mjs
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add json/today.json
+          git diff --cached --quiet || (git commit -m "Update today's matches" && git push)

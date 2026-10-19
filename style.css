@@ -384,6 +384,152 @@ select optgroup {
     transform: none;
 }
 
+/* ---------- Sekmeler ve günün maçları ---------- */
+
+.tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.tab {
+    border: none;
+    border-radius: 9px;
+    padding: 9px 8px;
+    background: none;
+    color: var(--muted);
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.tab[aria-selected="true"] {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text);
+}
+
+.tab-count {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    border-radius: 9px;
+    background: var(--accent-dark);
+    color: #fff;
+    font-size: 11px;
+}
+
+.tab-count:empty {
+    display: none;
+}
+
+.tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tab-panel[hidden] {
+    display: none;
+}
+
+.today-date {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: left;
+}
+
+.today-list {
+    max-height: 360px;
+    overflow-y: auto;
+    margin: 0 -6px;
+    padding: 0 6px;
+    text-align: left;
+}
+
+.today-league {
+    margin: 10px 0 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.today-league:first-child {
+    margin-top: 0;
+}
+
+.fixture {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    text-align: left;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.fixture:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fixture:active {
+    transform: scale(0.98);
+}
+
+.fixture-time {
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.fixture-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fixture-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.fixture-team span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fixture-play {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-dark);
+    font-size: 12px;
+}
+
 /* ---------- Logo rozetleri ---------- */
 
 .badge {
@@ -414,6 +560,7 @@ select optgroup {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
+.badge-xxs { width: 22px; height: 22px; font-size: 7px; }
 .badge-xs { width: 26px; height: 26px; font-size: 8px; }
 .badge-sm { width: 34px; height: 34px; font-size: 10px; }
 .badge-md { width: 52px; height: 52px; font-size: 14px; }

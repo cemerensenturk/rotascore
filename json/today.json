@@ -1,0 +1,115 @@
+{
+ "date": "2026-10-20",
+ "generatedAt": "2026-10-19T22:06:32.804Z",
+ "source": "api-football",
+ "matches": [
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T19:45:00+03:00",
+   "home": {
+    "id": "fenerbahce",
+    "name": "Fenerbahçe"
+   },
+   "away": {
+    "id": "slavia-prag",
+    "name": "Slavia Praha"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T19:45:00+03:00",
+   "home": {
+    "id": "sabah",
+    "name": "Sabah FA"
+   },
+   "away": {
+    "id": "borussia-dortmund",
+    "name": "Borussia Dortmund"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "as-roma",
+    "name": "AS Roma"
+   },
+   "away": {
+    "id": "slovan-bratislava",
+    "name": "Slovan Bratislava"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "porto",
+    "name": "FC Porto"
+   },
+   "away": {
+    "id": "psv",
+    "name": "PSV Eindhoven"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "liverpool",
+    "name": "Liverpool"
+   },
+   "away": {
+    "id": "villarreal",
+    "name": "Villarreal"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "manchester-city",
+    "name": "Manchester City"
+   },
+   "away": {
+    "id": "aek-athens",
+    "name": "AEK Athens FC"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "napoli",
+    "name": "Napoli"
+   },
+   "away": {
+    "id": "bodo-glimt",
+    "name": "Bodo/Glimt"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "paris-saint-germain",
+    "name": "Paris Saint Germain"
+   },
+   "away": {
+    "id": "barcelona",
+    "name": "Barcelona"
+   }
+  },
+  {
+   "competition": "ucl",
+   "kickoff": "2026-10-20T22:00:00+03:00",
+   "home": {
+    "id": "stuttgart",
+    "name": "VfB Stuttgart"
+   },
+   "away": {
+    "id": "atletico-madrid",
+    "name": "Atletico Madrid"
+   }
+  }
+ ]
+}

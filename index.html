@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,19 +40,32 @@
                 <h1 class="brand-title"><img class="brand-logo" src="./img/brand.webp" alt="RotaScore" width="52" height="52"></h1>
                 <button class="icon-btn" id="sound-toggle" type="button" aria-label="Sound">🔊</button>
             </div>
-            <label class="field">
-                <span>League</span>
-                <select id="filter-category">
-                    <option value="all">All Teams</option>
-                    <!-- Ligler ve turnuvalar json/competitions.json dosyasından gelir -->
-                </select>
-            </label>
-            <div class="matchup">
-                <button class="team-pick" id="pick-home" type="button" data-side="home"></button>
-                <span class="vs">vs</span>
-                <button class="team-pick" id="pick-away" type="button" data-side="away"></button>
+            <div class="tabs" role="tablist">
+                <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Pick teams</button>
+                <button class="tab" id="tab-today" type="button" role="tab" data-tab="today" aria-selected="false">Today <span class="tab-count" id="today-count"></span></button>
             </div>
-            <button class="primary" id="kickoff-btn" type="button">Kick off</button>
+
+            <div class="tab-panel" id="panel-teams" role="tabpanel">
+                <label class="field">
+                    <span>League</span>
+                    <select id="filter-category">
+                        <option value="all">All Teams</option>
+                        <!-- Ligler ve turnuvalar json/competitions.json dosyasından gelir -->
+                    </select>
+                </label>
+                <div class="matchup">
+                    <button class="team-pick" id="pick-home" type="button" data-side="home"></button>
+                    <span class="vs">vs</span>
+                    <button class="team-pick" id="pick-away" type="button" data-side="away"></button>
+                </div>
+                <button class="primary" id="kickoff-btn" type="button">Kick off</button>
+            </div>
+
+            <!-- Günün maçları: json/today.json (her sabah GitHub Actions günceller) -->
+            <div class="tab-panel" id="panel-today" role="tabpanel" hidden>
+                <p class="today-date" id="today-date"></p>
+                <div class="today-list" id="today-list"><p class="empty">Loading today's matches…</p></div>
+            </div>
         </section>
 
         <!-- İstatistikler ve maçın olayları -->
