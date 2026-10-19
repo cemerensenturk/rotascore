@@ -1,11 +1,13 @@
 // Ses: rahatsız etmeyecek seviyede, sadece atmosfer için.
-// Tribün uğultusu dosya kullanmadan Web Audio ile üretilir.
+// Tüm sesler Web Audio ile çalınır; tribün uğultusu dosya kullanmadan üretilir.
 // Tarayıcılar sesi ancak bir dokunuştan sonra açar; bu yüzden unlock() "Kick off" tıklamasında çağrılır.
+// (iPhone Safari <audio> ile çalınan sesleri dokunuştan birkaç saniye sonra engelliyor ve
+// ses seviyesini yok sayıyor; Web Audio'da ikisi de sorun değil.)
 const Sound = (() => {
-    const whistle = new Audio("./sounds/whistle.mp3");
-    const goal = new Audio("./sounds/goal.mp3");
-    whistle.volume = 0.2;
-    goal.volume = 0.28;
+    const CLIPS = {
+        whistle: { file: "./sounds/whistle.mp3", volume: 0.2 },
+        goal: { file: "./sounds/goal.mp3", volume: 0.28 }
+    };
 
     const CROWD_LEVEL = 0.035; // Maç boyunca uğultu seviyesi
 
@@ -22,7 +24,7 @@ const Sound = (() => {
     let noiseBuffer = null;
     let crowdOn = false;
     let lastTick = 0;
-    let clipTimer = 0;
+    let playing = []; // Çalmakta olan düdük/gol sesleri (sessize alınınca durdurulur)
 
     function unlock() {
         if (context) {
@@ -57,6 +59,15 @@ const Sound = (() => {
         crowd.gain.value = 0;
         source.connect(band).connect(crowd).connect(master);
         source.start();
+
+        // Düdük ve gol seslerini bir kere indirip çözümle
+        for (const clip of Object.values(CLIPS)) {
+            fetch(clip.file)
+                .then(response => response.arrayBuffer())
+                .then(data => new Promise((resolve, reject) => context.decodeAudioData(data, resolve, reject)))
+                .then(buffer => { clip.buffer = buffer; })
+                .catch(() => {});
+        }
     }
 
     function rampCrowd(level, seconds) {
@@ -109,13 +120,26 @@ const Sound = (() => {
         source.stop(now + 0.07);
     }
 
-    function playClip(audio, maxMs) {
-        if (muted) return;
-        clearTimeout(clipTimer);
-        audio.currentTime = 0;
-        const promise = audio.play();
-        if (promise) promise.catch(() => {});
-        if (maxMs) clipTimer = setTimeout(() => audio.pause(), maxMs);
+    // maxMs verilirse ses o kadar çalar ve kısa bir geçişle kısılır
+    function playClip(clip, maxMs) {
+        if (!context || !clip.buffer || muted) return;
+        const now = context.currentTime;
+        const source = context.createBufferSource();
+        source.buffer = clip.buffer;
+        const gain = context.createGain();
+        gain.gain.setValueAtTime(clip.volume, now);
+        source.connect(gain).connect(master);
+        source.start(now);
+        if (maxMs) {
+            const end = now + maxMs / 1000;
+            gain.gain.setValueAtTime(clip.volume, end - 0.15);
+            gain.gain.linearRampToValueAtTime(0, end);
+            source.stop(end);
+        }
+        playing.push(source);
+        source.onended = () => {
+            playing = playing.filter(item => item !== source);
+        };
     }
 
     return {
@@ -126,10 +150,10 @@ const Sound = (() => {
         tick,
         // Başlama ve devre arası kısa, maç sonu uzun düdük
         whistle(kind) {
-            playClip(whistle, kind === "end" ? 0 : kind === "half" ? 1400 : 900);
+            playClip(CLIPS.whistle, kind === "end" ? 0 : kind === "half" ? 1400 : 900);
         },
         goal() {
-            playClip(goal, 0);
+            playClip(CLIPS.goal, 0);
             swell(0.1, 3);
         },
         isMuted() {
@@ -139,8 +163,8 @@ const Sound = (() => {
             muted = !muted;
             if (master) master.gain.value = muted ? 0 : 1;
             if (muted) {
-                whistle.pause();
-                goal.pause();
+                playing.forEach(source => source.stop());
+                playing = [];
             }
             try {
                 localStorage.setItem("rotascore-muted", muted ? "1" : "0");
