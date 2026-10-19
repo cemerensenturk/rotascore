@@ -11,10 +11,14 @@ const BALL_RADIUS = 30;
 const BOUNCE_RADIUS = FIELD_RADIUS - BALL_RADIUS; // Topun kenarı çizgiye değince seker
 const BADGE_RADIUS = 62;    // Sahanın ortasındaki lig logosu
 const GOAL_WIDTH = 25;      // Kale derinliği
-const GOAL_HEIGHT = 80;     // Kale ağzı (direkler arası)
+const GOAL_HEIGHT = 64;     // Kale ağzı (direkler arası)
 const GOAL_SPEED = 0.8;     // Kalenin adım başına dönüşü (derece)
-const KEEPER_SIZE = 26;     // Kalecinin boyu
-const KEEPER_SPEED = 1.3;   // Kalecinin adım başına en fazla kayması
+const KEEPER_SIZE = 20;     // Kalecinin boyu
+const KEEPER_SPEED = 1.3;   // Kalecinin adım başına en fazla kayması (form 1.0'da)
+const KEEPER_REACTION = 10; // Kaleci topu kaç adım geriden takip eder (10 adım = 0.17 sn, form 1.0'da)
+const KEEPER_STRETCH = 20;  // Gövdenin ötesinde "parmak ucu" kurtarış bölgesi
+const KEEPER_FORM_MIN = 0.5; // Kalecinin maçtan maça değişen formu: kötü gün ...
+const KEEPER_FORM_MAX = 1.7; // ... iyi gün
 
 // Hız: çarpıştıkça artar, MAX_SPEED'i geçemez; çarpışma olmadan
 // sürtünmeyle yavaş yavaş BASE_SPEED'e iner. Birim: adım başına dünya birimi (60 adım = 1 sn)
@@ -39,7 +43,8 @@ const HALFTIME_MS = 2500;
 let team1 = { index: 0, history: [] };
 let team2 = { index: 1, history: [] };
 let goal = { x: CENTER + FIELD_RADIUS, y: CENTER, angle: 0, speed: GOAL_SPEED };
-let keeper = { pos: 0 }; // Kale ağzı boyunca konumu (kale merkezine göre)
+// Kaleci: kale ağzı boyunca konumu (kale merkezine göre), o maçki formu ve gecikmeli gördüğü top konumları
+let keeper = { pos: 0, form: 1, seen: [] };
 let score = [0, 0];
 let goalParticles = [];
 let collisionEffects = [];
@@ -201,6 +206,7 @@ function startGame(homeId, awayId) {
     celebration = null;
     shakeAmount = 0;
 
+    keeper.form = randomBetween(KEEPER_FORM_MIN, KEEPER_FORM_MAX);
     resetPositions();
     gameState = "countdown";
     stateTimer = COUNTDOWN_MS;
@@ -217,8 +223,8 @@ function clockLabel() {
     return clock.extra > 0 ? `${clock.minute}+${clock.extra}'` : `${clock.minute}'`;
 }
 
-function addEvent(type, team) {
-    const event = { type: type, team: team ? team.index : null, minute: clockLabel() };
+function addEvent(type, team, details) {
+    const event = { type: type, team: team ? team.index : null, minute: clockLabel(), ...details };
     if (type === "added") event.added = clock.added;
     matchEvents.push(event);
     uiEvent(event);
@@ -665,7 +671,7 @@ function step() {
         if (stateTimer <= 0) {
             gameState = "playing";
             Sound.whistle("start");
-            addEvent("kickoff");
+            addEvent("kickoff", null, { keeperForm: keeper.form });
         }
     } else if (gameState === "playing") {
         updatePositions();
@@ -749,11 +755,11 @@ function updatePositions() {
         team.x = CENTER + nx * (BOUNCE_RADIUS - 1);
         team.y = CENTER + ny * (BOUNCE_RADIUS - 1);
 
-        if (result === "save") {
+        if (result === "save" || result === "great-save") {
             addFloatingText("SAVE!", hitX, hitY, "#FFD400");
             addCollisionEffect(hitX, hitY, "ball");
-            addEvent("save", team);
-            Sound.swell(0.03, 1);
+            addEvent("save", team, { great: result === "great-save" });
+            Sound.swell(result === "great-save" ? 0.06 : 0.03, 1);
         } else if (result === "post") {
             addFloatingText("POST!", hitX, hitY, "#FFFFFF");
             addCollisionEffect(hitX, hitY, "ball");
@@ -809,10 +815,16 @@ function checkGoalHit(hitX, hitY) {
 
     const offset = offsetAlongGoal(hitX, hitY);
     if (Math.abs(offset) < GOAL_HEIGHT / 2) {
-        const saved = Math.abs(offset - keeper.pos) < KEEPER_SIZE / 2 + BALL_RADIUS * 0.35;
-        return saved ? "save" : "goal";
+        // Top kalecinin gövdesine gelirse büyük ihtimalle kurtarılır, kenarına gelirse
+        // parmak uçlarıyla kurtarılma şansı uzaklaştıkça azalır. Formu iyi kaleci daha geniş alanı kapatır.
+        const distance = Math.abs(offset - keeper.pos);
+        const body = (KEEPER_SIZE / 2 + BALL_RADIUS * 0.35) * keeper.form;
+        const stretch = body + KEEPER_STRETCH * keeper.form;
+        if (distance < body) return Math.random() < 0.92 ? "save" : "goal";
+        if (distance < stretch && Math.random() < 0.6 * (1 - (distance - body) / (stretch - body))) return "great-save";
+        return "goal";
     }
-    if (Math.abs(offset) < GOAL_HEIGHT / 2 + BALL_RADIUS * 0.5) return "post";
+    if (Math.abs(offset) < GOAL_HEIGHT / 2 + BALL_RADIUS * 0.25) return "post";
     return null;
 }
 
@@ -820,10 +832,15 @@ function updateKeeper() {
     // Kaleye en yakın topu takip et
     const nearest = [team1, team2].reduce((a, b) =>
         Math.hypot(a.x - goal.x, a.y - goal.y) < Math.hypot(b.x - goal.x, b.y - goal.y) ? a : b);
+    // Kaleci topu biraz geriden görür (tepki süresi); formu iyiyse daha çabuk tepki verir ve daha hızlı kayar
+    keeper.seen.push(offsetAlongGoal(nearest.x, nearest.y));
+    const delay = Math.round(KEEPER_REACTION / keeper.form);
+    while (keeper.seen.length > delay + 1) keeper.seen.shift();
+
     const limit = (GOAL_HEIGHT - KEEPER_SIZE) / 2;
-    const target = Math.max(-limit, Math.min(limit, offsetAlongGoal(nearest.x, nearest.y)));
-    const move = Math.max(-KEEPER_SPEED, Math.min(KEEPER_SPEED, target - keeper.pos));
-    keeper.pos += move;
+    const target = Math.max(-limit, Math.min(limit, keeper.seen[0]));
+    const speed = KEEPER_SPEED * keeper.form;
+    keeper.pos += Math.max(-speed, Math.min(speed, target - keeper.pos));
 }
 
 function updateGoalPosition() {
@@ -898,6 +915,7 @@ function resetPositions() {
     goal.angle = Math.random() * 360;
     updateGoalPosition();
     keeper.pos = 0;
+    keeper.seen = [];
 }
 
 // Topu sahanın bir yarısında rastgele bir noktaya koyar ve rastgele bir yöne gönderir

@@ -290,14 +290,23 @@ function eventText(event) {
     const team = event.team === null ? null : (event.team === 0 ? team1 : team2);
     switch (event.type) {
         case "goal": return `GOAL! ${team.name}`;
-        case "save": return `Saved! ${team.name} denied by the keeper`;
+        case "save": return event.great
+            ? `What a save! Fingertips deny ${team.name}`
+            : `Saved! ${team.name} denied by the keeper`;
         case "post": return `Off the post! ${team.name} so close`;
         case "added": return `${event.added} minute${event.added > 1 ? "s" : ""} added`;
-        case "kickoff": return `Kick-off: ${team1.name} vs ${team2.name}`;
+        case "kickoff": return `Kick-off: ${team1.name} vs ${team2.name}${keeperFormText(event.keeperForm)}`;
         case "halftime": return `Half-time: ${score[0]} - ${score[1]}`;
         case "fulltime": return `Full-time: ${team1.name} ${score[0]} - ${score[1]} ${team2.name}`;
         default: return "";
     }
+}
+
+// Kalecinin o günkü formu: sadece belirgin iyi ya da kötü günlerde söylenir
+function keeperFormText(form) {
+    if (form >= 1.4) return " · Keeper in top form today";
+    if (form <= 0.8) return " · Keeper looks shaky today";
+    return "";
 }
 
 function setTicker(text) {
