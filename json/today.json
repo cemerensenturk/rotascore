@@ -1,114 +1,126 @@
 {
- "date": "2026-10-20",
- "generatedAt": "2026-10-20T07:58:34.039Z",
- "source": "api-football",
+ "date": "2026-10-21",
+ "generatedAt": "2026-10-21T08:03:08.044Z",
+ "source": "football-data.org",
  "matches": [
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T19:45:00+03:00",
+   "kickoff": "2026-10-21T16:45:00Z",
    "home": {
-    "id": "fenerbahce",
-    "name": "Fenerbahçe"
+    "id": "lille",
+    "name": "Lille OSC"
    },
    "away": {
-    "id": "slavia-prag",
-    "name": "Slavia Praha"
+    "id": "galatasaray",
+    "name": "Galatasaray SK"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T19:45:00+03:00",
+   "kickoff": "2026-10-21T16:45:00Z",
    "home": {
-    "id": "sabah",
-    "name": "Sabah FA"
+    "id": "como",
+    "name": "Como 1907"
    },
    "away": {
-    "id": "borussia-dortmund",
-    "name": "Borussia Dortmund"
+    "id": "manchester-united",
+    "name": "Manchester United FC"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "as-roma",
-    "name": "AS Roma"
+    "id": "inter-milan",
+    "name": "FC Internazionale Milano"
    },
    "away": {
-    "id": "slovan-bratislava",
-    "name": "Slovan Bratislava"
+    "id": "shaktar-donetsk",
+    "name": "FK Shakhtar Donetsk"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "porto",
-    "name": "FC Porto"
+    "id": "club-brugge",
+    "name": "Club Brugge KV"
    },
    "away": {
-    "id": "psv",
-    "name": "PSV Eindhoven"
+    "id": "lens",
+    "name": "Racing Club de Lens"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "liverpool",
-    "name": "Liverpool"
+    "id": null,
+    "name": "Sporting Clube de Portugal"
    },
    "away": {
-    "id": "villarreal",
-    "name": "Villarreal"
+    "id": "lask-linz",
+    "name": "LASK Linz"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "manchester-city",
-    "name": "Manchester City"
+    "id": "real-betis",
+    "name": "Real Betis Balompié"
    },
    "away": {
-    "id": "aek-athens",
-    "name": "AEK Athens FC"
+    "id": "feyenoord",
+    "name": "Feyenoord Rotterdam"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "napoli",
-    "name": "Napoli"
+    "id": "bayern-munich",
+    "name": "FC Bayern München"
    },
    "away": {
-    "id": "bodo-glimt",
-    "name": "Bodo/Glimt"
+    "id": "arsenal",
+    "name": "Arsenal FC"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "paris-saint-germain",
-    "name": "Paris Saint Germain"
+    "id": "aston-villa",
+    "name": "Aston Villa FC"
    },
    "away": {
-    "id": "barcelona",
-    "name": "Barcelona"
+    "id": "viking",
+    "name": "Viking FK"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-10-20T22:00:00+03:00",
+   "kickoff": "2026-10-21T19:00:00Z",
    "home": {
-    "id": "stuttgart",
-    "name": "VfB Stuttgart"
+    "id": "real-madrid",
+    "name": "Real Madrid CF"
    },
    "away": {
-    "id": "atletico-madrid",
-    "name": "Atletico Madrid"
+    "id": "rb-leipzig",
+    "name": "RB Leipzig"
+   }
+  },
+  {
+   "competition": "la-liga",
+   "kickoff": "2026-10-21T18:00:00Z",
+   "home": {
+    "id": "levante",
+    "name": "Levante UD"
+   },
+   "away": {
+    "id": "athletic-bilbao",
+    "name": "Athletic Club"
    }
   }
  ]
