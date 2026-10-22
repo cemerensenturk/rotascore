@@ -675,14 +675,29 @@ function renderToday(data) {
         return;
     }
 
+    // Her lig açılır kapanır bir grup; aynı anda tek grup açık, ilki açık gelir
     let currentLeague = null;
+    let group = null;
     for (const match of todayMatches) {
         if (match.competition !== currentLeague) {
             currentLeague = match.competition;
-            const heading = document.createElement("h3");
-            heading.className = "today-league";
-            heading.textContent = competitions.find(c => c.id === currentLeague).name;
-            list.appendChild(heading);
+            const section = document.createElement("details");
+            section.className = "today-league";
+            section.name = "today-league";
+            section.open = !list.children.length;
+
+            const heading = document.createElement("summary");
+            const title = document.createElement("span");
+            title.textContent = competitions.find(c => c.id === currentLeague).name;
+            const count = document.createElement("span");
+            count.className = "today-league-count";
+            count.textContent = todayMatches.filter(m => m.competition === currentLeague).length;
+            heading.append(title, count);
+
+            group = document.createElement("div");
+            group.className = "today-league-matches";
+            section.append(heading, group);
+            list.appendChild(section);
         }
 
         const fixture = document.createElement("button");
@@ -709,7 +724,7 @@ function renderToday(data) {
 
         fixture.append(teamsColumn, play);
         fixture.setAttribute("aria-label", `Play ${teamData(match.home.id).name} vs ${teamData(match.away.id).name}`);
-        list.appendChild(fixture);
+        group.appendChild(fixture);
     }
 }
 
