@@ -5,7 +5,7 @@ name: Today's matches
 
 on:
   schedule:
-    - cron: "0 3 * * *" # Her gün 03:00 UTC = 06:00 Türkiye
+    - cron: "17 0 * * *" # Her gün 00:17 UTC = 03:17 Türkiye (tam saat başı GitHub yoğun olduğu için geciktiriyor)
   workflow_dispatch:
 
 permissions:
