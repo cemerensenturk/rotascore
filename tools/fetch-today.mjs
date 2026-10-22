@@ -127,6 +127,8 @@ async function collect() {
         try {
             return { source: "api-football", fixtures: await fromApiFootball(process.env.API_FOOTBALL_KEY) };
         } catch (error) {
+            // Yedeğe düşülse bile neden düşüldüğü log'da görünsün
+            console.warn(`Yedek kaynağa geçiliyor: ${error.message}`);
             errors.push(error.message);
         }
     }
