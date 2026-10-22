@@ -1,11 +1,12 @@
 // Günün öne çıkan maçlarını çekip json/today.json dosyasına yazar.
 // GitHub Actions her sabah çalıştırır (.github/workflows/today.yml).
 //
-// Kaynaklar:
-//   1. API-Football (API_FOOTBALL_KEY)   – tüm ligler, Süper Lig ve Avrupa kupaları dahil
+// Kaynaklar (sırayla denenir):
+//   1. ESPN skor servisi (anahtar gerekmez) – tüm ligler, Süper Lig ve Avrupa kupaları dahil
 //   2. football-data.org (FOOTBALL_DATA_KEY) – yedek: 5 büyük lig ve Şampiyonlar Ligi
+//   3. API-Football (API_FOOTBALL_KEY)       – yedek: tüm ligler
 //
-// Elle denemek için:  API_FOOTBALL_KEY=... node tools/fetch-today.mjs
+// Elle denemek için:  node tools/fetch-today.mjs
 // Kaydedilmiş bir yanıtla denemek için:  node tools/fetch-today.mjs --from-file yanit.json
 
 import fs from "node:fs";
@@ -21,13 +22,24 @@ const API_FOOTBALL_LEAGUES = {
     39: "premier-league", 140: "la-liga", 78: "bundesliga", 135: "serie-a", 61: "ligue-1",
     203: "super-lig", 2: "ucl", 3: "uel", 848: "uecl"
 };
+const ESPN_LEAGUES = {
+    "eng.1": "premier-league", "esp.1": "la-liga", "ger.1": "bundesliga", "ita.1": "serie-a", "fra.1": "ligue-1",
+    "tur.1": "super-lig", "uefa.champions": "ucl", "uefa.europa": "uel", "uefa.europa.conf": "uecl"
+};
 const FOOTBALL_DATA_LEAGUES = {
     PL: "premier-league", PD: "la-liga", BL1: "bundesliga", SA: "serie-a", FL1: "ligue-1", CL: "ucl"
 };
 const ORDER = Object.values(API_FOOTBALL_LEAGUES);
 
-// Türkiye saatine göre bugünün tarihi (YYYY-MM-DD)
-const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
+// Türkiye saatine göre bir anın tarihi (YYYY-MM-DD)
+const istanbulDate = date => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(date);
+const today = istanbulDate(new Date());
+// Türkiye günü UTC ve ABD saatinde iki güne yayıldığı için sağlayıcılardan komşu günü de isteyip süzüyoruz
+function shiftDay(date, days) {
+    const shifted = new Date(`${date}T00:00:00Z`);
+    shifted.setUTCDate(shifted.getUTCDate() + days);
+    return shifted.toISOString().slice(0, 10);
+}
 
 // ---------- Takım adı -> bizim takım kimliğimiz ----------
 
@@ -73,6 +85,24 @@ function resolveTeam(name, competitionId) {
 
 // ---------- Kaynaklar ----------
 
+async function fromEspn() {
+    // ESPN tarih aralığı kabul etmiyor, her gün ayrı istenir
+    const requests = Object.entries(ESPN_LEAGUES).flatMap(([code, competition]) =>
+        [shiftDay(today, -1), today].map(date => ({ code, competition, date: date.replaceAll("-", "") })));
+    const results = await Promise.all(requests.map(async ({ code, competition, date }) => {
+        const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${date}`);
+        // Tek bir lig bile alınamazsa eksik liste yazmak yerine yedeğe geçilir
+        if (!response.ok) throw new Error(`ESPN ${code}: ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data.events)) throw new Error(`ESPN ${code}: beklenmeyen yanıt`);
+        return data.events.map(event => {
+            const sides = Object.fromEntries(event.competitions[0].competitors.map(c => [c.homeAway, c.team.displayName]));
+            return { competition, kickoff: new Date(event.date).toISOString().replace(".000Z", "Z"), home: sides.home, away: sides.away };
+        });
+    }));
+    return results.flat().filter(f => istanbulDate(new Date(f.kickoff)) === today);
+}
+
 async function fromApiFootball(key) {
     const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}&timezone=Europe/Istanbul`, {
         headers: { "x-apisports-key": key }
@@ -96,17 +126,14 @@ function parseApiFootball(data) {
 }
 
 async function fromFootballData(key) {
-    // Türkiye gece yarısı UTC'de önceki güne düştüğü için iki günü isteyip süzüyoruz
-    const next = new Date(`${today}T00:00:00Z`);
-    next.setUTCDate(next.getUTCDate() + 1);
-    const response = await fetch(`https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${next.toISOString().slice(0, 10)}`, {
+    const response = await fetch(`https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${shiftDay(today, 1)}`, {
         headers: { "X-Auth-Token": key }
     });
     const data = await response.json();
     if (!response.ok) throw new Error(`football-data.org: ${response.status} ${data.message || ""}`);
     return data.matches
         .filter(m => FOOTBALL_DATA_LEAGUES[m.competition.code])
-        .filter(m => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date(m.utcDate)) === today)
+        .filter(m => istanbulDate(new Date(m.utcDate)) === today)
         .map(m => ({
             competition: FOOTBALL_DATA_LEAGUES[m.competition.code],
             kickoff: m.utcDate,
@@ -122,24 +149,24 @@ async function collect() {
     if (fileIndex > -1) {
         return { source: "file", fixtures: parseApiFootball(JSON.parse(fs.readFileSync(process.argv[fileIndex + 1], "utf8"))) };
     }
+    const sources = [
+        ["espn", () => fromEspn()],
+        ["football-data.org", process.env.FOOTBALL_DATA_KEY && (() => fromFootballData(process.env.FOOTBALL_DATA_KEY))],
+        ["api-football", process.env.API_FOOTBALL_KEY && (() => fromApiFootball(process.env.API_FOOTBALL_KEY))]
+    ];
     const errors = [];
-    if (process.env.API_FOOTBALL_KEY) {
+    for (const [source, fetchFixtures] of sources) {
+        if (!fetchFixtures) continue;
         try {
-            return { source: "api-football", fixtures: await fromApiFootball(process.env.API_FOOTBALL_KEY) };
+            return { source, fixtures: await fetchFixtures() };
         } catch (error) {
             // Yedeğe düşülse bile neden düşüldüğü log'da görünsün
             console.warn(`Yedek kaynağa geçiliyor: ${error.message}`);
             errors.push(error.message);
         }
     }
-    if (process.env.FOOTBALL_DATA_KEY) {
-        try {
-            return { source: "football-data.org", fixtures: await fromFootballData(process.env.FOOTBALL_DATA_KEY) };
-        } catch (error) {
-            errors.push(error.message);
-        }
-    }
-    throw new Error(`Maçlar alınamadı: ${errors.join(" | ") || "API anahtarı yok"}`);
+    // Hiçbir kaynak çalışmazsa today.json'a dokunulmaz ve workflow hata verir
+    throw new Error(`Maçlar alınamadı: ${errors.join(" | ")}`);
 }
 
 const { source, fixtures } = await collect();
