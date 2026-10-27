@@ -1,66 +1,42 @@
 {
- "date": "2026-10-26",
- "generatedAt": "2026-10-26T04:52:47.539Z",
+ "date": "2026-10-27",
+ "generatedAt": "2026-10-27T05:10:35.934Z",
  "source": "espn",
  "matches": [
   {
-   "competition": "ligue-1",
-   "kickoff": "2026-10-26T19:30:00Z",
+   "competition": "serie-a",
+   "kickoff": "2026-10-27T17:30:00Z",
    "home": {
-    "id": "paris-saint-germain",
-    "name": "Paris Saint-Germain"
+    "id": "sassuolo",
+    "name": "Sassuolo"
    },
    "away": {
-    "id": "olympique-lyonnais",
-    "name": "Lyon"
+    "id": "lazio",
+    "name": "Lazio"
    }
   },
   {
-   "competition": "la-liga",
-   "kickoff": "2026-10-26T20:00:00Z",
+   "competition": "serie-a",
+   "kickoff": "2026-10-27T19:45:00Z",
    "home": {
-    "id": "sevilla",
-    "name": "Sevilla"
+    "id": "as-roma",
+    "name": "AS Roma"
    },
    "away": {
-    "id": "osasuna",
-    "name": "Osasuna"
+    "id": "cagliari",
+    "name": "Cagliari"
    }
   },
   {
-   "competition": "super-lig",
-   "kickoff": "2026-10-26T16:00:00Z",
+   "competition": "serie-a",
+   "kickoff": "2026-10-27T19:45:00Z",
    "home": {
-    "id": "besiktas",
-    "name": "Besiktas"
+    "id": "torino",
+    "name": "Torino"
    },
    "away": {
-    "id": "basaksehir",
-    "name": "Istanbul Basaksehir"
-   }
-  },
-  {
-   "competition": "super-lig",
-   "kickoff": "2026-10-26T16:00:00Z",
-   "home": {
-    "id": "rizespor",
-    "name": "Caykur Rizespor"
-   },
-   "away": {
-    "id": "trabzonspor",
-    "name": "Trabzonspor"
-   }
-  },
-  {
-   "competition": "super-lig",
-   "kickoff": "2026-10-26T18:30:00Z",
-   "home": {
-    "id": "galatasaray",
-    "name": "Galatasaray"
-   },
-   "away": {
-    "id": "fenerbahce",
-    "name": "Fenerbahce"
+    "id": "como",
+    "name": "Como"
    }
   }
  ]
