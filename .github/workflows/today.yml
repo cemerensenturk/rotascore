@@ -1,4 +1,4 @@
-# Her sabah günün maçlarını çekip json/today.json olarak kaydeder.
+# Her sabah günün maçlarını (json/today.json) ve Realistic mod için Elo puanlarını (json/ratings.json) kaydeder.
 # Site bu dosyayı doğrudan GitHub'dan okur, FTP ile yüklemeye gerek yoktur.
 # Elle çalıştırmak için: GitHub > Actions > "Today's matches" > Run workflow
 name: Today's matches
@@ -27,9 +27,14 @@ jobs:
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
           FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
 
+      # Puan kaynağı o gün yanıt vermezse önceki puanlar kalır, günün maçları yine kaydedilir
+      - name: Fetch Elo ratings
+        run: node tools/fetch-ratings.mjs
+        continue-on-error: true
+
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add json/today.json
+          git add json/today.json json/ratings.json
           git diff --cached --quiet || (git commit -m "Update today's matches" && git push)

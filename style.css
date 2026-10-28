@@ -60,6 +60,9 @@ h1, h2 {
     max-width: 420px;
     margin: 0 auto;
     padding: 12px 12px 24px;
+    /* Ana ekrandan tam ekran açıldığında çentik ve alt çubuk içeriği örtmesin */
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
 @media (min-width: 900px) {
@@ -382,6 +385,115 @@ select optgroup {
     cursor: default;
     filter: none;
     transform: none;
+}
+
+/* ---------- Uygulamayı yükle, oyun modu ---------- */
+
+.brand-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pill-btn {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 17px;
+    border: 1px solid rgba(106, 208, 74, 0.5);
+    background: rgba(106, 208, 74, 0.14);
+    color: var(--text);
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.pill-btn[hidden] {
+    display: none;
+}
+
+.mode-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mode-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-right: auto;
+}
+
+/* Sekmelerden daha küçük ve sade: ikisi birbirine karışmasın */
+.mode-switch {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.mode-option {
+    border: none;
+    background: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+}
+
+.mode-option[aria-checked="true"] {
+    background: var(--accent-dark);
+    color: #fff;
+}
+
+.info-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    font-weight: 800;
+    font-style: italic;
+    font-family: Georgia, serif;
+}
+
+.info-panel {
+    text-align: left;
+}
+
+.info-item h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.info-item p,
+.install-steps {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+.info-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.install-steps {
+    padding-left: 20px;
+}
+
+.install-steps li {
+    margin-bottom: 8px;
+}
+
+.share-glyph {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* ---------- Sekmeler ve günün maçları ---------- */
@@ -714,6 +826,7 @@ select optgroup {
     background: var(--panel-solid);
     border: 1px solid var(--line);
     border-radius: 20px 20px 0 0;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
     animation: slideUp 0.25s ease-out;
 }

@@ -1,0 +1,20 @@
+{
+ "national": {
+  "Czech Republic": "Czechia",
+  "Türkiye": "Turkey"
+ },
+ "clubs": {
+  "Man City": "manchester-city",
+  "Man United": "manchester-united",
+  "Forest": "nottingham-forest",
+  "Wolves": "wolverhampton-wanderers",
+  "Bilbao": "athletic-bilbao",
+  "Paris SG": "paris-saint-germain",
+  "Gladbach": "borussia-monchengladbach",
+  "Inter": "inter-milan",
+  "Milan": "ac-milan",
+  "Koeln": "koln",
+  "Depor": "deportivo-la-coruna",
+  "Sporting": "sporting-lizbon"
+ }
+}

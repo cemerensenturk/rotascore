@@ -20,6 +20,14 @@ const KEEPER_STRETCH = 20;  // Gövdenin ötesinde "parmak ucu" kurtarış bölg
 const KEEPER_FORM_MIN = 0.5; // Kalecinin maçtan maça değişen formu: kötü gün ...
 const KEEPER_FORM_MAX = 1.7; // ... iyi gün
 
+// Realistic mod: takım gücü (Elo) farkı. Güçlü takımın topu yön değiştirdiğinde kaleye doğru
+// hafifçe döner (bitiricilik), zayıfınki hafifçe uzaklaşır; toplar çarpışınca güçlü takım
+// biraz daha hızlanır (ikili mücadele). Katsayılar, oyundaki kazanma oranları Elo'nun
+// beklediği oranlara uysun diye simülasyonla ayarlandı (tools/calibrate-strength.mjs).
+const FINISHING_TURN = 0.9;  // Elo farkı çok büyükken yön değişiminde en fazla dönüş (radyan)
+const DUEL_EDGE = 0.35;      // Çarpışmada hızlanmaya en fazla katkı
+const ELO_SCALE = 900;       // Elo farkı bu ölçekle -1..1 arasına sıkıştırılır (tanh)
+
 // Hız: çarpıştıkça artar, MAX_SPEED'i geçemez; çarpışma olmadan
 // sürtünmeyle yavaş yavaş BASE_SPEED'e iner. Birim: adım başına dünya birimi (60 adım = 1 sn)
 const BASE_SPEED = 3.5;
@@ -185,12 +193,14 @@ function setupTeam(team, teamId) {
 
 // ---------- Maç akışı ----------
 
-function startGame(homeId, awayId) {
+function startGame(homeId, awayId, mode) {
     if (gameState !== "idle" && gameState !== "ended") return;
     if (!teamsDatabase[homeId] || !teamsDatabase[awayId]) return;
 
     setupTeam(team1, homeId);
     setupTeam(team2, awayId);
+    requestedMode = mode;
+    setStrength(mode === "realistic" ? teamRating(homeId) : null, mode === "realistic" ? teamRating(awayId) : null);
 
     score = [0, 0];
     clock = { half: 1, minute: 0, added: 0, extra: 0 };
@@ -213,6 +223,39 @@ function startGame(homeId, awayId) {
     Sound.startCrowd();
     uiMatchStarted();
     startLoop();
+}
+
+// Elo puanları json/ratings.json'dan (her sabah GitHub Actions günceller): { id: { elo, kind } }
+// kind "club" ya da "national"; iki ölçek farklı olduğu için kulüp ile milli takım karşılaştırılmaz.
+let ratings = {};
+
+function teamRating(id) {
+    return ratings[id] || null;
+}
+
+// İki takımın da aynı türden puanı varsa güç farkı uygulanır, yoksa maç Classic gibi (eşit) oynanır
+function setStrength(home, away) {
+    const realistic = !!(home && away && home.kind === away.kind);
+    const edge = realistic ? Math.tanh((home.elo - away.elo) / ELO_SCALE) : 0;
+    team1.edge = edge;
+    team2.edge = -edge;
+    team1.rating = home ? home.elo : null;
+    team2.rating = away ? away.elo : null;
+    matchMode = realistic ? "realistic" : "classic";
+}
+
+let matchMode = "classic";     // Maçın gerçekte oynandığı mod
+let requestedMode = "classic"; // Kullanıcının seçtiği mod (puan eksikse Classic'e düşebilir)
+
+// Bitiricilik: topun yönünü kaleye doğru (zayıf takımda kaleden uzağa) biraz çevirir
+function applyFinishing(team) {
+    if (!team.edge) return;
+    const toGoal = Math.atan2(goal.y - team.y, goal.x - team.x);
+    let delta = toGoal - Math.atan2(team.dy, team.dx);
+    delta = Math.atan2(Math.sin(delta), Math.cos(delta)); // -PI..PI
+    const turn = FINISHING_TURN * team.edge; // eksi: kaleden uzağa
+    const amount = turn > 0 ? Math.min(Math.abs(delta), turn) : -Math.min(Math.PI - Math.abs(delta), -turn);
+    rotateVelocity(team, Math.sign(delta || 1) * amount);
 }
 
 function newStats() {
@@ -813,6 +856,7 @@ function updatePositions() {
         bounceOffWall(team, nx, ny);
         team.x = CENTER + nx * (BOUNCE_RADIUS - 1);
         team.y = CENTER + ny * (BOUNCE_RADIUS - 1);
+        applyFinishing(team);
         markShotStart(team);
 
         if (result === "save" || result === "great-save") {
@@ -1053,6 +1097,7 @@ function placeRandomly(team, sideAngle) {
     team.dx = Math.cos(direction) * speed;
     team.dy = Math.sin(direction) * speed;
     team.spin = randomBetween(-SPIN_MAX, SPIN_MAX);
+    applyFinishing(team);
     markShotStart(team);
 }
 
@@ -1141,7 +1186,8 @@ function handleCollision(ball1, ball2) {
     for (const ball of [ball1, ball2]) {
         rotateVelocity(ball, randomBetween(-0.25, 0.25));
         ball.spin = randomBetween(-SPIN_MAX, SPIN_MAX) * 1.5;
-        setSpeed(ball, Math.hypot(ball.dx, ball.dy) * BALL_BOOST);
+        setSpeed(ball, Math.hypot(ball.dx, ball.dy) * BALL_BOOST * (1 + DUEL_EDGE * (ball.edge || 0)));
+        applyFinishing(ball);
         markShotStart(ball);
     }
 

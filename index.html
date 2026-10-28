@@ -2,12 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b1220">
+    <!-- Ana ekrana eklenince uygulama gibi açılsın -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="img/app/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="RotaScore">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>RotaScore by Kafeinal</title>
     <!-- Site Cloudflare arkasında: CSS/JS 7 gün önbellekte kalır.
          Bu dosyalardan biri değişince ?v= değerini güncelle, ziyaretçiler hemen yenisini alır. -->
-    <link rel="stylesheet" href="style.css?v=2026-10-22.1">
+    <link rel="stylesheet" href="style.css?v=2026-10-28.3">
     <link rel="icon" type="image/x-icon" href="./img/favicon.png">
 </head>
 <body>
@@ -40,7 +47,18 @@
         <section class="panel controls">
             <div class="brand">
                 <h1 class="brand-title"><img class="brand-logo" src="./img/brand.webp" alt="RotaScore" width="52" height="52"></h1>
-                <button class="icon-btn" id="sound-toggle" type="button" aria-label="Sound">🔊</button>
+                <div class="brand-actions">
+                    <button class="pill-btn" id="install-btn" type="button" hidden>Install app</button>
+                    <button class="icon-btn" id="sound-toggle" type="button" aria-label="Sound">🔊</button>
+                </div>
+            </div>
+            <div class="mode-row">
+                <span class="mode-label">Mode</span>
+                <div class="mode-switch" role="radiogroup" aria-label="Game mode">
+                    <button type="button" class="mode-option" role="radio" data-mode="classic" aria-checked="true">Classic</button>
+                    <button type="button" class="mode-option" role="radio" data-mode="realistic" aria-checked="false">Realistic</button>
+                </div>
+                <button class="icon-btn info-btn" id="mode-info-btn" type="button" aria-label="About game modes">i</button>
             </div>
             <div class="tabs" role="tablist">
                 <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Pick teams</button>
@@ -91,6 +109,42 @@
         </div>
     </div>
 
+    <!-- Oyun modları hakkında -->
+    <div class="sheet" id="mode-info" hidden>
+        <div class="sheet-backdrop" data-close></div>
+        <div class="sheet-panel info-panel" role="dialog" aria-modal="true" aria-labelledby="mode-info-title">
+            <div class="sheet-head">
+                <h2 id="mode-info-title">Game modes</h2>
+                <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
+            </div>
+            <div class="info-item">
+                <h3>Classic</h3>
+                <p>Every team is equal. Pure chaos: any club can beat any other, it all comes down to bounces, the keeper's form and a bit of luck.</p>
+            </div>
+            <div class="info-item">
+                <h3>Realistic</h3>
+                <p>Team strength comes from real-world Elo ratings, updated daily. Stronger teams finish better and win more duels, so favourites win more often, tuned to match real-world odds. Upsets still happen.</p>
+            </div>
+            <p class="info-note">Ratings: clubelo.com for clubs, eloratings.net for national teams.</p>
+        </div>
+    </div>
+
+    <!-- iPhone: ana ekrana ekleme adımları (Safari kurulum penceresini desteklemiyor) -->
+    <div class="sheet" id="install-help" hidden>
+        <div class="sheet-backdrop" data-close></div>
+        <div class="sheet-panel info-panel" role="dialog" aria-modal="true" aria-labelledby="install-help-title">
+            <div class="sheet-head">
+                <h2 id="install-help-title">Add RotaScore to your Home Screen</h2>
+                <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
+            </div>
+            <ol class="install-steps">
+                <li>Tap the <strong>Share</strong> button <span class="share-glyph" aria-hidden="true">⬆︎</span> in Safari's toolbar</li>
+                <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+                <li>Tap <strong>Add</strong>. RotaScore opens full screen, like an app</li>
+            </ol>
+        </div>
+    </div>
+
     <!-- Maç sonu kartı -->
     <div class="sheet" id="result" hidden>
         <div class="sheet-backdrop" data-close></div>
@@ -114,7 +168,7 @@
     </div>
     <script src="sound.js?v=2026-10-20.3"></script>
     <script src="xg-table.js?v=2026-10-28.2"></script>
-    <script src="script.js?v=2026-10-28.2"></script>
-    <script src="ui.js?v=2026-10-28.2"></script>
+    <script src="script.js?v=2026-10-28.3"></script>
+    <script src="ui.js?v=2026-10-28.3"></script>
 </body>
 </html>

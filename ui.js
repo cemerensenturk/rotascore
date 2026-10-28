@@ -3,11 +3,13 @@
 
 const $ = id => document.getElementById(id);
 
-let selection = { category: "all", home: null, away: null };
+let selection = { category: "all", home: null, away: null, mode: "classic" };
 let activeCompetition = null; // Oynanan maçın ligi (sonuç kartında yazar)
 
 // Günün maçları her sabah GitHub Actions ile güncellenir; site dosyayı doğrudan GitHub'dan okur
 const TODAY_URL = "https://raw.githubusercontent.com/cemerensenturk/rotascore/main/json/today.json";
+// Realistic mod için Elo puanları da her sabah güncellenir
+const RATINGS_URL = "https://raw.githubusercontent.com/cemerensenturk/rotascore/main/json/ratings.json";
 let todayMatches = [];
 
 // ---------- Kayıtlı seçim (bir sonraki ziyarette hatırlansın) ----------
@@ -94,6 +96,7 @@ function onDataLoaded() {
     if ($("filter-category").value !== selection.category) selection.category = "all";
     applyCategory(selection.category);
     loadToday();
+    loadRatings();
 }
 
 function buildCategoryOptions() {
@@ -138,7 +141,9 @@ function renderPickButtons() {
         button.appendChild(teamBadge(id, "badge-md"));
         const text = document.createElement("span");
         text.className = "pick-text";
-        text.innerHTML = `<small>${side === "home" ? "Home" : "Away"}</small>`;
+        // Realistic modda takımın Elo puanı da görünür
+        const rating = selection.mode === "realistic" && teamRating(id);
+        text.innerHTML = `<small>${side === "home" ? "Home" : "Away"}${rating ? ` · Elo ${rating.elo}` : ""}</small>`;
         const name = document.createElement("strong");
         name.textContent = teamData(id).name;
         text.appendChild(name);
@@ -236,7 +241,7 @@ function kickOff(competition) {
     activeCompetition = competition && competition.id ? competition : currentCompetition();
     Sound.unlock();
     closeSheet($("result"));
-    startGame(selection.home, selection.away);
+    startGame(selection.home, selection.away, selection.mode);
 
     // Mobilde saha görünmüyorsa sahaya kaydır
     const stage = $("stage").getBoundingClientRect();
@@ -295,11 +300,21 @@ function eventText(event) {
             : `Saved! ${team.name} denied by the keeper`;
         case "post": return `Off the post! ${team.name} so close`;
         case "added": return `${event.added} minute${event.added > 1 ? "s" : ""} added`;
-        case "kickoff": return `Kick-off: ${team1.name} vs ${team2.name}${keeperFormText(event.keeperForm)}`;
+        case "kickoff": return `Kick-off: ${team1.name} vs ${team2.name}${modeText()}${keeperFormText(event.keeperForm)}`;
         case "halftime": return `Half-time: ${score[0]} - ${score[1]}`;
         case "fulltime": return `Full-time: ${team1.name} ${score[0]} - ${score[1]} ${team2.name}`;
         default: return "";
     }
+}
+
+// Realistic modda puanları, puan eksikse neden Classic oynandığını söyler
+function modeText() {
+    if (requestedMode !== "realistic") return "";
+    if (matchMode === "realistic") return ` · Realistic, Elo ${team1.rating} vs ${team2.rating}`;
+    const missing = [team1, team2].filter(team => team.rating === null).map(team => team.name);
+    return missing.length
+        ? ` · No rating for ${missing.join(" and ")}, playing Classic`
+        : " · Club vs national team, playing Classic";
 }
 
 // Kalecinin o günkü formu: sadece belirgin iyi ya da kötü günlerde söylenir
@@ -547,7 +562,8 @@ async function buildResultCard() {
     c.fillText("FULL-TIME", size / 2, 110);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 30px Inter, Arial, sans-serif";
-    c.fillText(activeCompetition ? activeCompetition.name : "Friendly", size / 2, 160);
+    const subtitle = (activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : "");
+    c.fillText(subtitle, size / 2, 160);
 
     // Logolar ve skor
     await drawCardBadge(c, team1, 250, 430, 140);
@@ -618,20 +634,30 @@ function roundRect(c, x, y, w, h, r) {
 
 // ---------- Günün maçları ----------
 
-async function loadToday() {
-    let data = null;
-    // Önce GitHub'daki güncel dosya, olmazsa sitedeki kopya
-    for (const url of [TODAY_URL, "./json/today.json"]) {
+// Önce GitHub'daki güncel dosya, olmazsa sitedeki kopya
+async function loadDaily(remoteUrl, localUrl) {
+    for (const url of [remoteUrl, localUrl]) {
         try {
             const response = await fetch(url, { cache: "no-cache" });
-            if (response.ok) {
-                data = await response.json();
-                break;
-            }
+            if (response.ok) return await response.json();
         } catch (error) {
             // sıradaki kaynağı dene
         }
     }
+    return null;
+}
+
+async function loadRatings() {
+    const data = await loadDaily(RATINGS_URL, "./json/ratings.json");
+    if (!data) return;
+    ratings = {};
+    for (const [id, elo] of Object.entries(data.clubs || {})) ratings[id] = { elo: elo, kind: "club" };
+    for (const [id, elo] of Object.entries(data.national || {})) ratings[id] = { elo: elo, kind: "national" };
+    renderPickButtons();
+}
+
+async function loadToday() {
+    const data = await loadDaily(TODAY_URL, "./json/today.json");
 
     todayMatches = data ? data.matches.filter(m => competitions.some(c => c.id === m.competition)) : [];
     todayMatches.forEach(match => {
@@ -807,3 +833,58 @@ soundButton.addEventListener("click", () => {
     renderSoundButton();
 });
 renderSoundButton();
+
+// ---------- Oyun modu ----------
+
+function renderMode() {
+    for (const option of document.querySelectorAll(".mode-option")) {
+        option.setAttribute("aria-checked", String(option.dataset.mode === selection.mode));
+    }
+}
+
+for (const option of document.querySelectorAll(".mode-option")) {
+    option.addEventListener("click", () => {
+        selection.mode = option.dataset.mode;
+        saveSelection();
+        renderMode();
+        renderPickButtons();
+    });
+}
+$("mode-info-btn").addEventListener("click", () => openSheet($("mode-info")));
+renderMode();
+
+// ---------- Ana ekrana ekle ----------
+
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+// iPhone/iPad Safari kurulum penceresini desteklemiyor; adımları anlatan paneli gösteriyoruz
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let installPrompt = null;
+
+if ("serviceWorker" in navigator) {
+    // sw.js de Cloudflare önbelleğinde kalabilir; değiştirince ?v= değerini artır
+    navigator.serviceWorker.register("./sw.js?v=1").catch(() => {});
+}
+
+// Android/Chrome: tarayıcı kurulabilir olduğunu söyleyince düğmeyi göster
+window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    installPrompt = event;
+    $("install-btn").hidden = false;
+});
+window.addEventListener("appinstalled", () => {
+    $("install-btn").hidden = true;
+});
+
+if (isIos && !isStandalone) $("install-btn").hidden = false;
+
+$("install-btn").addEventListener("click", async () => {
+    if (installPrompt) {
+        installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        if (choice.outcome === "accepted") $("install-btn").hidden = true;
+        installPrompt = null;
+    } else {
+        openSheet($("install-help"));
+    }
+});
