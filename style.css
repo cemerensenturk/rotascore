@@ -547,6 +547,14 @@ select optgroup {
     display: none;
 }
 
+/* Gün anahtarı solda, seçili günün tarihi sağda */
+.day-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
 .today-date {
     margin: 0;
     font-size: 12px;
@@ -554,7 +562,8 @@ select optgroup {
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    text-align: left;
+    text-align: right;
+    white-space: nowrap;
 }
 
 .today-list {

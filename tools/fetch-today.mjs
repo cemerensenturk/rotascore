@@ -1,4 +1,4 @@
-// Günün öne çıkan maçlarını çekip json/today.json dosyasına yazar.
+// Günün ve yarının öne çıkan maçlarını çekip json/today.json dosyasına yazar.
 // GitHub Actions her sabah çalıştırır (.github/workflows/today.yml).
 //
 // Kaynaklar (sırayla denenir):
@@ -33,13 +33,16 @@ const ORDER = Object.values(API_FOOTBALL_LEAGUES);
 
 // Türkiye saatine göre bir anın tarihi (YYYY-MM-DD)
 const istanbulDate = date => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(date);
-const today = istanbulDate(new Date());
-// Türkiye günü UTC ve ABD saatinde iki güne yayıldığı için sağlayıcılardan komşu günü de isteyip süzüyoruz
+// Türkiye günü UTC ve ABD saatinde iki güne yayıldığı için sağlayıcılardan komşu günleri de isteyip süzüyoruz
 function shiftDay(date, days) {
     const shifted = new Date(`${date}T00:00:00Z`);
     shifted.setUTCDate(shifted.getUTCDate() + days);
     return shifted.toISOString().slice(0, 10);
 }
+const today = istanbulDate(new Date());
+const tomorrow = shiftDay(today, 1);
+const WANTED_DAYS = [today, tomorrow];
+const isWanted = fixture => WANTED_DAYS.includes(istanbulDate(new Date(fixture.kickoff)));
 
 // ---------- Takım adı -> bizim takım kimliğimiz ----------
 
@@ -88,7 +91,7 @@ function resolveTeam(name, competitionId) {
 async function fromEspn() {
     // ESPN tarih aralığı kabul etmiyor, her gün ayrı istenir
     const requests = Object.entries(ESPN_LEAGUES).flatMap(([code, competition]) =>
-        [shiftDay(today, -1), today].map(date => ({ code, competition, date: date.replaceAll("-", "") })));
+        [shiftDay(today, -1), today, tomorrow].map(date => ({ code, competition, date: date.replaceAll("-", "") })));
     const results = await Promise.all(requests.map(async ({ code, competition, date }) => {
         const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${date}`);
         // Tek bir lig bile alınamazsa eksik liste yazmak yerine yedeğe geçilir
@@ -100,18 +103,22 @@ async function fromEspn() {
             return { competition, kickoff: new Date(event.date).toISOString().replace(".000Z", "Z"), home: sides.home, away: sides.away };
         });
     }));
-    return results.flat().filter(f => istanbulDate(new Date(f.kickoff)) === today);
+    return results.flat().filter(isWanted);
 }
 
 async function fromApiFootball(key) {
-    const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}&timezone=Europe/Istanbul`, {
-        headers: { "x-apisports-key": key }
-    });
-    const data = await response.json();
-    if (!response.ok || (data.errors && Object.keys(data.errors).length)) {
-        throw new Error(`API-Football: ${response.status} ${JSON.stringify(data.errors)}`);
-    }
-    return parseApiFootball(data);
+    // Ücretsiz plan yalnızca dün/bugün/yarın tarihlerine izin verir; her gün ayrı istek
+    const days = await Promise.all(WANTED_DAYS.map(async date => {
+        const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=${date}&timezone=Europe/Istanbul`, {
+            headers: { "x-apisports-key": key }
+        });
+        const data = await response.json();
+        if (!response.ok || (data.errors && Object.keys(data.errors).length)) {
+            throw new Error(`API-Football: ${response.status} ${JSON.stringify(data.errors)}`);
+        }
+        return parseApiFootball(data);
+    }));
+    return days.flat().filter(isWanted);
 }
 
 function parseApiFootball(data) {
@@ -126,20 +133,20 @@ function parseApiFootball(data) {
 }
 
 async function fromFootballData(key) {
-    const response = await fetch(`https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${shiftDay(today, 1)}`, {
+    const response = await fetch(`https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${shiftDay(today, 2)}`, {
         headers: { "X-Auth-Token": key }
     });
     const data = await response.json();
     if (!response.ok) throw new Error(`football-data.org: ${response.status} ${data.message || ""}`);
     return data.matches
         .filter(m => FOOTBALL_DATA_LEAGUES[m.competition.code])
-        .filter(m => istanbulDate(new Date(m.utcDate)) === today)
         .map(m => ({
             competition: FOOTBALL_DATA_LEAGUES[m.competition.code],
             kickoff: m.utcDate,
             home: m.homeTeam.name,
             away: m.awayTeam.name
-        }));
+        }))
+        .filter(isWanted);
 }
 
 // ---------- Çalıştır ----------
@@ -187,10 +194,15 @@ const matches = fixtures
     })
     .sort((a, b) => ORDER.indexOf(a.competition) - ORDER.indexOf(b.competition) || a.kickoff.localeCompare(b.kickoff));
 
-const output = { date: today, generatedAt: new Date().toISOString(), source, matches };
+// Bugünün maçları eski düzende en üstte kalır (önbellekte kalmış eski sayfalar yalnızca onları okur), yarın "tomorrow" altında
+const byDay = date => matches.filter(m => istanbulDate(new Date(m.kickoff)) === date);
+const output = {
+    date: today, generatedAt: new Date().toISOString(), source, matches: byDay(today),
+    tomorrow: { date: tomorrow, matches: byDay(tomorrow) }
+};
 fs.writeFileSync(path.join(root, "json/today.json"), JSON.stringify(output, null, 1) + "\n");
 
-console.log(`${today}: ${matches.length} maç (${source})`);
+console.log(`${today}: ${output.matches.length} maç, ${tomorrow}: ${output.tomorrow.matches.length} maç (${source})`);
 if (unmatched.size) {
     // Bunlar oyunda logosuz oynar; tools/team-aliases.json'a eklenerek eşleştirilebilir
     console.log(`Eşleşmeyen takımlar: ${[...unmatched].join(", ")}`);

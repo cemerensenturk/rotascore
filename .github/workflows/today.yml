@@ -1,4 +1,4 @@
-# Her sabah günün maçlarını (json/today.json) ve Realistic mod için Elo puanlarını (json/ratings.json) kaydeder.
+# Her sabah günün ve yarının maçlarını (json/today.json) ve Realistic mod için Elo puanlarını (json/ratings.json) kaydeder.
 # Site bu dosyayı doğrudan GitHub'dan okur, FTP ile yüklemeye gerek yoktur.
 # Elle çalıştırmak için: GitHub > Actions > "Today's matches" > Run workflow
 name: Today's matches

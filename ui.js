@@ -10,7 +10,9 @@ let activeCompetition = null; // Oynanan maçın ligi (sonuç kartında yazar)
 const TODAY_URL = "https://raw.githubusercontent.com/cemerensenturk/rotascore/main/json/today.json";
 // Realistic mod için Elo puanları da her sabah güncellenir
 const RATINGS_URL = "https://raw.githubusercontent.com/cemerensenturk/rotascore/main/json/ratings.json";
-let todayMatches = [];
+// Günün ve yarının maçları; sekmede hangisinin açık olduğu
+let dayMatches = { today: [], tomorrow: [] };
+let activeDay = "today";
 
 // ---------- Kayıtlı seçim (bir sonraki ziyarette hatırlansın) ----------
 
@@ -698,23 +700,38 @@ async function loadRatings() {
 async function loadToday() {
     const data = await loadDaily(TODAY_URL, "./json/today.json");
 
-    todayMatches = data ? data.matches.filter(m => competitions.some(c => c.id === m.competition)) : [];
-    todayMatches.forEach(match => {
-        match.home.id = match.home.id && teamsDatabase[match.home.id] ? match.home.id : addExternalTeam(match.home.name);
-        match.away.id = match.away.id && teamsDatabase[match.away.id] ? match.away.id : addExternalTeam(match.away.name);
-    });
+    const prepare = day => {
+        const matches = (day && day.matches ? day.matches : []).filter(m => competitions.some(c => c.id === m.competition));
+        matches.forEach(match => {
+            match.home.id = match.home.id && teamsDatabase[match.home.id] ? match.home.id : addExternalTeam(match.home.name);
+            match.away.id = match.away.id && teamsDatabase[match.away.id] ? match.away.id : addExternalTeam(match.away.name);
+        });
+        return { date: day && day.date ? day.date : null, matches };
+    };
+    let today = prepare(data);
+    let tomorrow = prepare(data && data.tomorrow);
 
-    renderToday(data);
-    $("today-count").textContent = todayMatches.length || "";
+    // Dosya her sabah 03:17'de yenilenir; gece yarısından sonra açıldıysa dosyanın "yarın"ı artık bugündür
+    const now = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
+    if (tomorrow.date === now) {
+        today = tomorrow;
+        tomorrow = { date: null, matches: [] };
+    }
+    dayMatches = { today, tomorrow };
 
-    // Bugün maç varsa ve kullanıcı en son takım seçimini kullanmadıysa "Today" açık gelsin
+    // Bugün maç yoksa ama yarın varsa yarın açık gelsin
+    activeDay = !today.matches.length && tomorrow.matches.length ? "tomorrow" : "today";
+    renderDay();
+    $("today-count").textContent = today.matches.length || "";
+
+    // Maç varsa ve kullanıcı en son takım seçimini kullanmadıysa "Today" açık gelsin
     let savedTab = null;
     try {
         savedTab = localStorage.getItem("rotascore-tab");
     } catch (error) {
         // yoksay
     }
-    if (todayMatches.length && savedTab !== "teams") showTab("today", false);
+    if ((today.matches.length || tomorrow.matches.length) && savedTab !== "teams") showTab("today", false);
 }
 
 // Veritabanımızda olmayan takım: logosuz, nötr renkli bir top olarak oynanır
@@ -727,17 +744,21 @@ function addExternalTeam(name) {
     return id;
 }
 
-function renderToday(data) {
+function renderDay() {
+    const day = dayMatches[activeDay];
+    const todayMatches = day.matches;
     const list = $("today-list");
     list.innerHTML = "";
 
-    if (data && data.date) {
-        const date = new Date(`${data.date}T12:00:00`);
-        $("today-date").textContent = date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    for (const option of document.querySelectorAll(".mode-option[data-day]")) {
+        option.setAttribute("aria-checked", String(option.dataset.day === activeDay));
     }
+    $("today-date").textContent = day.date
+        ? new Date(`${day.date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })
+        : "";
 
     if (!todayMatches.length) {
-        list.innerHTML = `<p class="empty">No featured matches today</p>`;
+        list.innerHTML = `<p class="empty">No featured matches ${activeDay}</p>`;
         return;
     }
 
@@ -832,6 +853,12 @@ function showTab(name, remember) {
 
 $("tab-teams").addEventListener("click", () => showTab("teams", true));
 $("tab-today").addEventListener("click", () => showTab("today", true));
+for (const option of document.querySelectorAll(".mode-option[data-day]")) {
+    option.addEventListener("click", () => {
+        activeDay = option.dataset.day;
+        renderDay();
+    });
+}
 
 $("filter-category").addEventListener("change", event => applyCategory(event.target.value));
 $("pick-home").addEventListener("click", () => openPicker("home"));
@@ -877,12 +904,13 @@ renderSoundButton();
 // ---------- Oyun modu ----------
 
 function renderMode() {
-    for (const option of document.querySelectorAll(".mode-option")) {
+    // Aynı görünümü Today sekmesindeki gün anahtarı da kullanır; yalnızca data-mode olanlar oyun modudur
+    for (const option of document.querySelectorAll(".mode-option[data-mode]")) {
         option.setAttribute("aria-checked", String(option.dataset.mode === selection.mode));
     }
 }
 
-for (const option of document.querySelectorAll(".mode-option")) {
+for (const option of document.querySelectorAll(".mode-option[data-mode]")) {
     option.addEventListener("click", () => {
         selection.mode = option.dataset.mode;
         saveSelection();

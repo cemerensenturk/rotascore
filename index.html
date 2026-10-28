@@ -14,7 +14,7 @@
     <title>RotaScore by Kafeinal</title>
     <!-- Site Cloudflare arkasında: CSS/JS 7 gün önbellekte kalır.
          Bu dosyalardan biri değişince ?v= değerini güncelle, ziyaretçiler hemen yenisini alır. -->
-    <link rel="stylesheet" href="style.css?v=2026-10-28.5">
+    <link rel="stylesheet" href="style.css?v=2026-10-29.1">
     <link rel="icon" type="image/x-icon" href="./img/favicon.png">
 </head>
 <body>
@@ -62,7 +62,7 @@
             </div>
             <div class="tabs" role="tablist">
                 <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Pick teams</button>
-                <button class="tab" id="tab-today" type="button" role="tab" data-tab="today" aria-selected="false">Today <span class="tab-count" id="today-count"></span></button>
+                <button class="tab" id="tab-today" type="button" role="tab" data-tab="today" aria-selected="false">Fixtures <span class="tab-count" id="today-count"></span></button>
             </div>
 
             <div class="tab-panel" id="panel-teams" role="tabpanel">
@@ -81,9 +81,15 @@
                 <button class="primary" id="kickoff-btn" type="button">Kick off</button>
             </div>
 
-            <!-- Günün maçları: json/today.json (her sabah GitHub Actions günceller) -->
+            <!-- Günün ve yarının maçları: json/today.json (her sabah GitHub Actions günceller) -->
             <div class="tab-panel" id="panel-today" role="tabpanel" hidden>
-                <p class="today-date" id="today-date"></p>
+                <div class="day-row">
+                    <div class="mode-switch" role="radiogroup" aria-label="Day">
+                        <button type="button" class="mode-option" role="radio" data-day="today" aria-checked="true">Today</button>
+                        <button type="button" class="mode-option" role="radio" data-day="tomorrow" aria-checked="false">Tomorrow</button>
+                    </div>
+                    <p class="today-date" id="today-date"></p>
+                </div>
                 <div class="today-list" id="today-list"><p class="empty">Loading today's matches…</p></div>
             </div>
         </section>
@@ -169,6 +175,6 @@
     <script src="sound.js?v=2026-10-20.3"></script>
     <script src="xg-table.js?v=2026-10-28.2"></script>
     <script src="script.js?v=2026-10-28.5"></script>
-    <script src="ui.js?v=2026-10-28.5"></script>
+    <script src="ui.js?v=2026-10-29.1"></script>
 </body>
 </html>
