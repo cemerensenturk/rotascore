@@ -786,7 +786,8 @@ function renderToday(data) {
         const play = document.createElement("span");
         play.className = "fixture-play";
         play.setAttribute("aria-hidden", "true");
-        play.textContent = "▶";
+        // Metin "▶" telefonlarda emoji olarak çiziliyor; sabit bir SVG üçgen kullanıyoruz
+        play.innerHTML = '<svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z"/></svg>';
 
         fixture.append(teamsColumn, play);
         fixture.setAttribute("aria-label", `Play ${teamData(match.home.id).name} vs ${teamData(match.away.id).name}`);

@@ -61,7 +61,7 @@ h1, h2 {
     margin: 0 auto;
     padding: 12px 12px 24px;
     /* Ana ekrandan tam ekran açıldığında çentik ve alt çubuk içeriği örtmesin */
-    padding-top: max(12px, env(safe-area-inset-top));
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
     padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
@@ -669,7 +669,13 @@ select optgroup {
     align-items: center;
     justify-content: center;
     background: var(--accent-dark);
-    font-size: 12px;
+}
+
+.fixture-play svg {
+    width: 12px;
+    height: 12px;
+    margin-left: 2px;
+    fill: #fff;
 }
 
 /* ---------- Logo rozetleri ---------- */
