@@ -65,6 +65,11 @@ h1, h2 {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
+/* Uzun tek satırlık metinler (ör. ticker'daki açılış duyurusu) sütunu ekrandan geniş yapmasın */
+.app > * {
+    min-width: 0;
+}
+
 /* Mobil: maç sürerken istatistikler sahanın hemen altında, takım seçimi en altta */
 @media (max-width: 899px) {
     .stage { order: 0; }
