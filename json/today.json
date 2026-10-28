@@ -1,42 +1,66 @@
 {
- "date": "2026-10-27",
- "generatedAt": "2026-10-27T05:10:35.934Z",
+ "date": "2026-10-28",
+ "generatedAt": "2026-10-28T05:46:53.157Z",
  "source": "espn",
  "matches": [
   {
    "competition": "serie-a",
-   "kickoff": "2026-10-27T17:30:00Z",
+   "kickoff": "2026-10-28T17:30:00Z",
    "home": {
-    "id": "sassuolo",
-    "name": "Sassuolo"
+    "id": "ac-milan",
+    "name": "AC Milan"
    },
    "away": {
-    "id": "lazio",
-    "name": "Lazio"
+    "id": "bologna",
+    "name": "Bologna"
    }
   },
   {
    "competition": "serie-a",
-   "kickoff": "2026-10-27T19:45:00Z",
+   "kickoff": "2026-10-28T17:30:00Z",
    "home": {
-    "id": "as-roma",
-    "name": "AS Roma"
+    "id": "parma",
+    "name": "Parma"
    },
    "away": {
-    "id": "cagliari",
-    "name": "Cagliari"
+    "id": "udinese",
+    "name": "Udinese"
    }
   },
   {
    "competition": "serie-a",
-   "kickoff": "2026-10-27T19:45:00Z",
+   "kickoff": "2026-10-28T17:30:00Z",
    "home": {
-    "id": "torino",
-    "name": "Torino"
+    "id": "venezia",
+    "name": "Venezia"
    },
    "away": {
-    "id": "como",
-    "name": "Como"
+    "id": "inter-milan",
+    "name": "Internazionale"
+   }
+  },
+  {
+   "competition": "serie-a",
+   "kickoff": "2026-10-28T19:45:00Z",
+   "home": {
+    "id": "genoa",
+    "name": "Genoa"
+   },
+   "away": {
+    "id": "juventus",
+    "name": "Juventus"
+   }
+  },
+  {
+   "competition": "serie-a",
+   "kickoff": "2026-10-28T19:45:00Z",
+   "home": {
+    "id": "monza",
+    "name": "Monza"
+   },
+   "away": {
+    "id": "napoli",
+    "name": "Napoli"
    }
   }
  ]
