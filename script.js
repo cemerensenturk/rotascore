@@ -216,7 +216,7 @@ function startGame(homeId, awayId) {
 }
 
 function newStats() {
-    return { shots: 0, onTarget: 0, posts: 0, pressure: 0 };
+    return { shots: 0, onTarget: 0, posts: 0, xg: 0, pressure: 0 };
 }
 
 function clockLabel() {
@@ -800,12 +800,7 @@ function updatePositions() {
         const hitY = CENTER + ny * FIELD_RADIUS;
 
         const result = checkGoalHit(hitX, hitY);
-        if (result) {
-            stats[team.index].shots++;
-            if (result !== "post") stats[team.index].onTarget++;
-            else stats[team.index].posts++;
-            uiStatsChanged();
-        }
+        if (isShot(hitX, hitY)) recordShot(team, shotFeatures(team), result);
 
         if (result === "goal") {
             // Topu ağlara yerleştir
@@ -818,6 +813,7 @@ function updatePositions() {
         bounceOffWall(team, nx, ny);
         team.x = CENTER + nx * (BOUNCE_RADIUS - 1);
         team.y = CENTER + ny * (BOUNCE_RADIUS - 1);
+        markShotStart(team);
 
         if (result === "save" || result === "great-save") {
             addFloatingText("SAVE!", hitX, hitY, "#FFD400");
@@ -871,6 +867,61 @@ function offsetAlongGoal(x, y) {
 }
 
 // Top duvara (hitX, hitY) noktasında çarptı: gol mü, kurtarış mı, direk mi?
+// ---------- xG (gol beklentisi) ----------
+// Şut: top kalenin yakınında (kale ağzının yaklaşık bir buçuk katı genişlikte) duvara çarptığında sayılır;
+// az farkla kaçanlar da şuttur. Şutun "çekildiği an" topun en son yön değiştirdiği andır
+// (duvardan sekme, diğer topa çarpma ya da başlama). xG o andaki iki bilgiden okunur:
+//   hedef  – top dümdüz gitseydi kale merkezine ne kadar yakın varacaktı (yay uzunluğu)
+//   mesafe – o noktadan duvara kadar kat edeceği yol (uzun yolda falso saptırır, kaleci hazırlanır)
+// Gerçek xG gibi kalecinin yeri ve şutun sonucu hesaba katılmaz. Değerler bu oyunun
+// simülasyonundan ölçülüp xg-table.js'e yazıldı (tools/train-xg.mjs).
+const SHOT_ZONE = GOAL_HEIGHT / 2 + 40;
+
+function isShot(hitX, hitY) {
+    const hitAngle = Math.atan2(hitY - CENTER, hitX - CENTER);
+    return angleDifference(hitAngle, (goal.angle * Math.PI) / 180) * FIELD_RADIUS < SHOT_ZONE;
+}
+
+function markShotStart(team) {
+    team.shotFrom = { x: team.x, y: team.y, dx: team.dx, dy: team.dy };
+}
+
+function shotFeatures(team) {
+    const from = team.shotFrom || { x: team.x, y: team.y, dx: team.dx, dy: team.dy };
+    // Düz çizgi, topun duvara değeceği çembere (BOUNCE_RADIUS) nerede varır?
+    const px = from.x - CENTER, py = from.y - CENTER;
+    const speed = Math.hypot(from.dx, from.dy) || 1;
+    const ux = from.dx / speed, uy = from.dy / speed;
+    const along = px * ux + py * uy;
+    // Çarpışmada top bir anlığına çemberin dışına itilmiş olabilir; mesafe negatif çıkmasın
+    const travel = Math.max(0, -along + Math.sqrt(Math.max(0, along * along - (px * px + py * py - BOUNCE_RADIUS * BOUNCE_RADIUS)))) || 0;
+    const aimAngle = Math.atan2(py + uy * travel, px + ux * travel);
+    const aim = angleDifference(aimAngle, (goal.angle * Math.PI) / 180) * FIELD_RADIUS;
+    return { aim: aim, travel: travel };
+}
+
+function recordShot(team, features, result) {
+    const shot = stats[team.index];
+    const xg = expectedGoals(features);
+    shot.shots++;
+    shot.xg += xg;
+    if (result === "post") shot.posts++;
+    else if (result) shot.onTarget++;
+    team.lastShotXg = xg;
+    uiStatsChanged();
+}
+
+// XG_TABLE.values[mesafe dilimi][hedef dilimi] arasında yumuşak geçişli (bilineer) okuma
+function expectedGoals({ aim, travel }) {
+    if (typeof XG_TABLE === "undefined") return 0;
+    const { aimStep, travelStep, values } = XG_TABLE;
+    const fa = Math.min(aim / aimStep, values[0].length - 1.001);
+    const ft = Math.min(travel / travelStep, values.length - 1.001);
+    const a = Math.floor(fa), t = Math.floor(ft), ta = fa - a, tt = ft - t;
+    const row = i => values[t][a + i] * (1 - tt) + values[t + 1][a + i] * tt;
+    return row(0) * (1 - ta) + row(1) * ta;
+}
+
 function checkGoalHit(hitX, hitY) {
     const hitAngle = Math.atan2(hitY - CENTER, hitX - CENTER);
     const goalAngle = (goal.angle * Math.PI) / 180;
@@ -917,8 +968,8 @@ function updateGoalPosition() {
 
 function scoreGoal(team) {
     score[team.index]++;
-    matchGoals.push({ team: team.index, minute: clockLabel() });
-    addEvent("goal", team);
+    matchGoals.push({ team: team.index, minute: clockLabel(), xg: team.lastShotXg });
+    addEvent("goal", team, { xg: team.lastShotXg });
     uiScoreChanged(team.index);
 
     Sound.goal();
@@ -1002,6 +1053,7 @@ function placeRandomly(team, sideAngle) {
     team.dx = Math.cos(direction) * speed;
     team.dy = Math.sin(direction) * speed;
     team.spin = randomBetween(-SPIN_MAX, SPIN_MAX);
+    markShotStart(team);
 }
 
 function addFloatingText(text, x, y, color) {
@@ -1090,6 +1142,7 @@ function handleCollision(ball1, ball2) {
         rotateVelocity(ball, randomBetween(-0.25, 0.25));
         ball.spin = randomBetween(-SPIN_MAX, SPIN_MAX) * 1.5;
         setSpeed(ball, Math.hypot(ball.dx, ball.dy) * BALL_BOOST);
+        markShotStart(ball);
     }
 
     const impactX = (ball1.x + ball2.x) / 2;

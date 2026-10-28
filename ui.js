@@ -289,7 +289,7 @@ const eventIcons = { goal: "⚽", save: "🧤", post: "🥅", added: "⏱", kick
 function eventText(event) {
     const team = event.team === null ? null : (event.team === 0 ? team1 : team2);
     switch (event.type) {
-        case "goal": return `GOAL! ${team.name}`;
+        case "goal": return `GOAL! ${team.name}${event.xg !== undefined ? ` · xG ${event.xg.toFixed(2)}` : ""}`;
         case "save": return event.great
             ? `What a save! Fingertips deny ${team.name}`
             : `Saved! ${team.name} denied by the keeper`;
@@ -336,11 +336,14 @@ function uiEvent(event) {
 function uiStatsChanged() {
     if (!stats.length) return;
     const totalPressure = stats[0].pressure + stats[1].pressure || 1;
+    const xg = value => value.toFixed(2);
+    const percent = value => `${value}%`;
     const rows = [
+        ["xG", stats[0].xg, stats[1].xg, xg],
         ["Shots", stats[0].shots, stats[1].shots],
-        ["On target", stats[0].onTarget, stats[1].onTarget],
+        ["Shots on target", stats[0].onTarget, stats[1].onTarget],
         ["Woodwork", stats[0].posts, stats[1].posts],
-        ["Pressure", Math.round(stats[0].pressure / totalPressure * 100), Math.round(stats[1].pressure / totalPressure * 100), "%"]
+        ["Pressure", Math.round(stats[0].pressure / totalPressure * 100), Math.round(stats[1].pressure / totalPressure * 100), percent]
     ];
 
     const container = $("stats");
@@ -354,10 +357,10 @@ function uiStatsChanged() {
 
     rows.forEach((row, i) => {
         const stat = container.children[i];
-        const [, home, away, unit = ""] = row;
+        const [, home, away, format = String] = row;
         const total = home + away || 1;
-        stat.querySelector(".stat-home").textContent = home + unit;
-        stat.querySelector(".stat-away").textContent = away + unit;
+        stat.querySelector(".stat-home").textContent = format(home);
+        stat.querySelector(".stat-away").textContent = format(away);
         stat.querySelector(".bar-home").style.width = `${(home / total) * 100}%`;
         stat.querySelector(".bar-away").style.width = `${(away / total) * 100}%`;
     });
@@ -572,8 +575,8 @@ async function buildResultCard() {
 
     // İstatistik satırı
     const statsLine = [
-        `Shots ${stats[0].shots}-${stats[1].shots}`,
-        `On target ${stats[0].onTarget}-${stats[1].onTarget}`,
+        `xG ${stats[0].xg.toFixed(2)}-${stats[1].xg.toFixed(2)}`,
+        `Shots on target ${stats[0].onTarget}-${stats[1].onTarget}`,
         `Woodwork ${stats[0].posts}-${stats[1].posts}`
     ].join("   ·   ");
     c.fillStyle = "rgba(255, 255, 255, 0.08)";
