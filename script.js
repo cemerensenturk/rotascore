@@ -572,7 +572,7 @@ function drawKeeper() {
         const amount = Math.sin(Math.min(1, t) * Math.PI); // uzan ve geri gel
         side = keeper.dive.side;
         lean = side * 4 * amount;
-        reach = 8 * amount;
+        reach = 9 * amount;
         y += lean;
     }
 
@@ -588,7 +588,7 @@ function drawKeeper() {
     // Kollar (önce koyu kenar, üstüne forma rengi)
     for (const color of ["rgba(0, 0, 0, 0.55)", "#FFD400"]) {
         ctx.strokeStyle = color;
-        ctx.lineWidth = color === "#FFD400" ? 2.4 : 3.8;
+        ctx.lineWidth = color === "#FFD400" ? 3.4 : 5.2;
         ctx.beginPath();
         for (const hand of hands) {
             ctx.moveTo(x, y);
@@ -603,7 +603,7 @@ function drawKeeper() {
     ctx.lineWidth = 1;
     for (const hand of hands) {
         ctx.beginPath();
-        ctx.arc(x + 1, hand.y, 2.4, 0, Math.PI * 2);
+        ctx.arc(x + 1, hand.y, 3.1, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
     }
@@ -611,16 +611,16 @@ function drawKeeper() {
     // Gövde (omuzlar kale ağzı boyunca geniş)
     ctx.fillStyle = "#FFD400";
     ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(x, y, 4, 6.5, lean * 0.08, 0, Math.PI * 2);
+    ctx.ellipse(x, y, 5.2, 8, lean * 0.08, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
     // Kafa (yukarıdan bakınca saç)
     ctx.fillStyle = "#3B2A1E";
     ctx.beginPath();
-    ctx.arc(x + 0.6, y, 3, 0, Math.PI * 2);
+    ctx.arc(x + 0.6, y, 3.6, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     ctx.lineCap = "butt";

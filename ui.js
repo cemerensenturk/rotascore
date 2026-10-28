@@ -559,48 +559,38 @@ async function buildResultCard() {
     // Başlık
     c.fillStyle = "#6AD04A";
     c.font = "800 34px Inter, Arial, sans-serif";
-    c.fillText("FULL-TIME", size / 2, 110);
+    c.fillText("FULL-TIME", size / 2, 92);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 30px Inter, Arial, sans-serif";
     const subtitle = (activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : "");
-    c.fillText(subtitle, size / 2, 160);
+    c.fillText(subtitle, size / 2, 138);
 
     // Logolar ve skor
-    await drawCardBadge(c, team1, 250, 430, 140);
-    await drawCardBadge(c, team2, size - 250, 430, 140);
+    await drawCardBadge(c, team1, 250, 320, 118);
+    await drawCardBadge(c, team2, size - 250, 320, 118);
     c.fillStyle = "#FFFFFF";
-    c.font = "800 150px Inter, Arial, sans-serif";
-    c.fillText(`${score[0]}-${score[1]}`, size / 2, 440);
+    c.font = "800 140px Inter, Arial, sans-serif";
+    c.fillText(`${score[0]}-${score[1]}`, size / 2, 328);
 
     // Takım adları
     for (const [team, x] of [[team1, 250], [team2, size - 250]]) {
         c.fillStyle = "#FFFFFF";
-        fitFont(c, team.name, 400, 42, 800);
-        c.fillText(team.name, x, 625);
+        fitFont(c, team.name, 400, 40, 800);
+        c.fillText(team.name, x, 482);
     }
 
     // Golleri atanlar (dakikalar)
     for (const [index, x] of [[0, 250], [1, size - 250]]) {
         const minutes = matchGoals.filter(g => g.team === index).map(g => g.minute);
         c.fillStyle = "rgba(255, 255, 255, 0.75)";
-        c.font = "600 30px Inter, Arial, sans-serif";
+        c.font = "600 27px Inter, Arial, sans-serif";
         const lines = [];
         for (let i = 0; i < minutes.length; i += 4) lines.push(minutes.slice(i, i + 4).join("  "));
-        lines.slice(0, 3).forEach((line, i) => c.fillText(`⚽ ${line}`, x, 685 + i * 42));
+        lines.slice(0, 2).forEach((line, i) => c.fillText(`⚽ ${line}`, x, 530 + i * 36));
     }
 
-    // İstatistik satırı
-    const statsLine = [
-        `xG ${stats[0].xg.toFixed(2)}-${stats[1].xg.toFixed(2)}`,
-        `Shots on target ${stats[0].onTarget}-${stats[1].onTarget}`,
-        `Woodwork ${stats[0].posts}-${stats[1].posts}`
-    ].join("   ·   ");
-    c.fillStyle = "rgba(255, 255, 255, 0.08)";
-    roundRect(c, 90, 860, size - 180, 76, 38);
-    c.fill();
-    c.fillStyle = "rgba(255, 255, 255, 0.85)";
-    fitFont(c, statsLine, size - 240, 30, 600);
-    c.fillText(statsLine, size / 2, 899);
+    // İstatistikler: sitedeki "Match stats" paneli gibi, takım renklerinde çubuklarla
+    drawCardStats(c, 90, 596, size - 180);
 
     // Alt bilgi: RotaScore logosu ve site adresi
     const brand = new Image();
@@ -620,6 +610,55 @@ async function buildResultCard() {
     c.fillText("cemeren.dev/rotascore", size - 90, 1010);
 
     return new Promise(resolve => card.toBlob(resolve, "image/png"));
+}
+
+// Kartın istatistik bloğu: her satırda sol değer, ortada etiket, sağ değer ve altında iki renkli çubuk
+function drawCardStats(c, x, y, width) {
+    const totalPressure = stats[0].pressure + stats[1].pressure || 1;
+    const rows = [
+        ["xG", stats[0].xg, stats[1].xg, v => v.toFixed(2)],
+        ["Shots", stats[0].shots, stats[1].shots],
+        ["Shots on target", stats[0].onTarget, stats[1].onTarget],
+        ["Woodwork", stats[0].posts, stats[1].posts],
+        ["Pressure", Math.round(stats[0].pressure / totalPressure * 100), Math.round(stats[1].pressure / totalPressure * 100), v => `${v}%`]
+    ];
+    const rowHeight = 58;
+    const padding = 26;
+    const [homeColor, awayColor] = matchColors();
+
+    c.fillStyle = "rgba(255, 255, 255, 0.07)";
+    roundRect(c, x, y, width, rows.length * rowHeight + padding * 2 - 14, 28);
+    c.fill();
+
+    const left = x + padding;
+    const right = x + width - padding;
+    rows.forEach(([label, home, away, format = String], index) => {
+        const top = y + padding + index * rowHeight;
+        c.textBaseline = "middle";
+        c.font = "800 26px Inter, Arial, sans-serif";
+        c.fillStyle = "#FFFFFF";
+        c.textAlign = "left";
+        c.fillText(format(home), left, top + 12);
+        c.textAlign = "right";
+        c.fillText(format(away), right, top + 12);
+        c.font = "600 22px Inter, Arial, sans-serif";
+        c.fillStyle = "rgba(255, 255, 255, 0.6)";
+        c.textAlign = "center";
+        c.fillText(label, x + width / 2, top + 12);
+
+        // Çubuk: değerler oranında soldan ev sahibi, sağdan deplasman
+        const barY = top + 34;
+        const barHeight = 9;
+        const gap = 6;
+        const total = home + away;
+        const span = right - left - gap;
+        const homeWidth = total ? span * home / total : span / 2;
+        c.fillStyle = homeColor;
+        if (homeWidth > 0) { roundRect(c, left, barY, homeWidth, barHeight, barHeight / 2); c.fill(); }
+        c.fillStyle = awayColor;
+        if (span - homeWidth > 0) { roundRect(c, left + homeWidth + gap, barY, span - homeWidth, barHeight, barHeight / 2); c.fill(); }
+    });
+    c.textAlign = "center";
 }
 
 function roundRect(c, x, y, w, h, r) {
