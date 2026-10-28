@@ -44,7 +44,7 @@ let team1 = { index: 0, history: [] };
 let team2 = { index: 1, history: [] };
 let goal = { x: CENTER + FIELD_RADIUS, y: CENTER, angle: 0, speed: GOAL_SPEED };
 // Kaleci: kale ağzı boyunca konumu (kale merkezine göre), o maçki formu ve gecikmeli gördüğü top konumları
-let keeper = { pos: 0, form: 1, seen: [] };
+let keeper = { pos: 0, form: 1, seen: [], dive: null }; // dive: { side, elapsed } plonjon animasyonu
 let score = [0, 0];
 let goalParticles = [];
 let collisionEffects = [];
@@ -509,14 +509,78 @@ function drawGoal() {
     ctx.fillRect(-GOAL_WIDTH / 2, -GOAL_HEIGHT / 2, 3, GOAL_HEIGHT);
     ctx.fillRect(-GOAL_WIDTH / 2, GOAL_HEIGHT / 2 - 3, GOAL_WIDTH, 3);
 
-    // Kaleci (kale çizgisinde, topa doğru kayar)
+    drawKeeper();
+    ctx.restore();
+}
+
+const KEEPER_DIVE_MS = 350;
+
+// Kaleci, yukarıdan bakılan küçük bir figür: gövde, kafa, iki yana açık kollar ve eldivenler.
+// Kale çizgisinin hemen önünde durur (yerel koordinatlar: x merkeze doğru, y kale ağzı boyunca).
+// Kurtarış ya da golde topa doğru kısa bir plonjon yapar.
+function drawKeeper() {
+    const x = GOAL_WIDTH / 2 - 3;
+    let y = keeper.pos;
+    let lean = 0;     // Plonjon tarafına doğru gövdenin kayması
+    let reach = 0;    // Plonjon tarafındaki kolun ek uzanması
+    let side = 0;
+    if (keeper.dive) {
+        const t = keeper.dive.elapsed / KEEPER_DIVE_MS;
+        const amount = Math.sin(Math.min(1, t) * Math.PI); // uzan ve geri gel
+        side = keeper.dive.side;
+        lean = side * 4 * amount;
+        reach = 8 * amount;
+        y += lean;
+    }
+
+    const armSpan = KEEPER_SIZE / 2 + 2;
+    const hands = [
+        { y: y - armSpan - (side < 0 ? reach : 0) },
+        { y: y + armSpan + (side > 0 ? reach : 0) }
+    ];
+
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+
+    // Kollar (önce koyu kenar, üstüne forma rengi)
+    for (const color of ["rgba(0, 0, 0, 0.55)", "#FFD400"]) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = color === "#FFD400" ? 2.4 : 3.8;
+        ctx.beginPath();
+        for (const hand of hands) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + 1, hand.y);
+        }
+        ctx.stroke();
+    }
+
+    // Eldivenler
+    ctx.fillStyle = "#FFFFFF";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.lineWidth = 1;
+    for (const hand of hands) {
+        ctx.beginPath();
+        ctx.arc(x + 1, hand.y, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    // Gövde (omuzlar kale ağzı boyunca geniş)
     ctx.fillStyle = "#FFD400";
     ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-    ctx.lineWidth = 1.5;
-    ctx.fillRect(GOAL_WIDTH / 2 - 8, keeper.pos - KEEPER_SIZE / 2, 7, KEEPER_SIZE);
-    ctx.strokeRect(GOAL_WIDTH / 2 - 8, keeper.pos - KEEPER_SIZE / 2, 7, KEEPER_SIZE);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 4, 6.5, lean * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
 
-    ctx.restore();
+    // Kafa (yukarıdan bakınca saç)
+    ctx.fillStyle = "#3B2A1E";
+    ctx.beginPath();
+    ctx.arc(x + 0.6, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.lineCap = "butt";
 }
 
 function drawEffects() {
@@ -818,6 +882,8 @@ function checkGoalHit(hitX, hitY) {
         // Top kalecinin gövdesine gelirse büyük ihtimalle kurtarılır, kenarına gelirse
         // parmak uçlarıyla kurtarılma şansı uzaklaştıkça azalır. Formu iyi kaleci daha geniş alanı kapatır.
         const distance = Math.abs(offset - keeper.pos);
+        // Kaleci her durumda topa doğru plonjon yapar (gol olsa bile)
+        keeper.dive = { side: Math.sign(offset - keeper.pos) || 1, elapsed: 0 };
         const body = (KEEPER_SIZE / 2 + BALL_RADIUS * 0.35) * keeper.form;
         const stretch = body + KEEPER_STRETCH * keeper.form;
         if (distance < body) return Math.random() < 0.92 ? "save" : "goal";
@@ -896,6 +962,11 @@ function updateEffects() {
         piece.rotation += piece.spin;
     }
 
+    if (keeper.dive) {
+        keeper.dive.elapsed += STEP_MS;
+        if (keeper.dive.elapsed >= KEEPER_DIVE_MS) keeper.dive = null;
+    }
+
     if (shakeAmount > 0) {
         shakeAmount *= 0.9;
         if (shakeAmount < 0.5) shakeAmount = 0;
@@ -916,6 +987,7 @@ function resetPositions() {
     updateGoalPosition();
     keeper.pos = 0;
     keeper.seen = [];
+    keeper.dive = null;
 }
 
 // Topu sahanın bir yarısında rastgele bir noktaya koyar ve rastgele bir yöne gönderir

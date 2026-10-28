@@ -423,11 +423,9 @@ function resultFileName() {
 async function shareResult() {
     const file = new File([resultBlob], resultFileName(), { type: "image/png" });
     try {
-        await navigator.share({
-            files: [file],
-            title: "RotaScore",
-            text: `${team1.name} ${score[0]} - ${score[1]} ${team2.name} · cemeren.dev/rotascore`
-        });
+        // Sadece resim paylaşılır: metin de eklenirse iPhone'da "Kopyala" ikisini birden kopyalıyor
+        // ve WhatsApp'a iki ayrı gönderi olarak yapışıyor. Skor ve site adresi zaten kartın üstünde.
+        await navigator.share({ files: [file] });
     } catch (error) {
         // Kullanıcı paylaşımı iptal ettiyse sorun değil
     }
