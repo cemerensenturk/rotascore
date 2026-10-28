@@ -65,6 +65,15 @@ h1, h2 {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
+/* Mobil: maç sürerken istatistikler sahanın hemen altında, takım seçimi en altta */
+@media (max-width: 899px) {
+    .stage { order: 0; }
+    .controls { order: 1; }
+    .match-stats { order: 2; }
+    body.match-live .match-stats { order: 1; }
+    body.match-live .controls { order: 2; }
+}
+
 @media (min-width: 900px) {
     .app {
         max-width: 860px;

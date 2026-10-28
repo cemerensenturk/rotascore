@@ -268,6 +268,8 @@ function uiMatchStarted() {
     $("kickoff-btn").disabled = true;
     $("kickoff-btn").textContent = "Live";
     $("match-stats").classList.add("has-match");
+    // Mobilde maç sürerken istatistikler sahanın hemen altına çıkar, oynarken kaydırmak gerekmez
+    document.body.classList.add("match-live");
     setTicker(`${team1.name} vs ${team2.name}`);
     uiClockChanged();
     uiStatsChanged();
@@ -423,6 +425,8 @@ function uiMatchEnded() {
         resultUrl = URL.createObjectURL(resultBlob);
         $("result-card").src = resultUrl;
         $("share-btn").hidden = !canShareFiles();
+        // Paneller sonuç kartı açılırken yer değiştirsin, kayma göze çarpmasın
+        document.body.classList.remove("match-live");
         openSheet($("result"));
     }, 1600);
 }
