@@ -10,6 +10,8 @@ let tournament = null;                                 // aktif turnuva (localSt
 let cupSetup = { competition: "uecl", team: null };    // kurulum ekranındaki seçim
 let tournamentMatch = null;                            // şu an canlı oynanan turnuva maçı: { label }
 let abandonArmed = 0;
+let drawReveal = null;                                 // kura açıklanırken: { count, timer }
+const DRAW_REVEAL_MS = 420;                            // rakipler bu aralıkla tek tek görünür
 
 function cupCompetition() {
     const id = tournament ? tournament.competition : cupSetup.competition;
@@ -99,10 +101,19 @@ function startTournament() {
     }
     saveTournament();
     renderMode();
+    // Kura açıklanır: rakipler sırayla gelir, bitene kadar maç başlatılamaz
+    const count = t => t.league.matchdays.length;
+    Sound.unlock();
+    drawReveal = { count: count(tournament) };
+    for (let i = 0; i < drawReveal.count; i++) setTimeout(() => Sound.tick(3), i * DRAW_REVEAL_MS + 200);
+    drawReveal.timer = setTimeout(() => {
+        drawReveal = null;
+        renderTournament();
+    }, drawReveal.count * DRAW_REVEAL_MS + 500);
     renderTournament();
-    // Kurayı göster
     $("cup-path-section").open = true;
     $("cup-table-section").open = false;
+    $("cup-path-section").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function abandonTournament() {
@@ -115,6 +126,8 @@ function abandonTournament() {
     }
     tournament = null;
     tournamentMatch = null;
+    if (drawReveal) clearTimeout(drawReveal.timer);
+    drawReveal = null;
     saveTournament();
     renderMode();
     renderTournament();
@@ -175,11 +188,11 @@ function renderTournament() {
     out.textContent = userOutText(t);
     nextBox.innerHTML = "";
     const busy = gameState !== "idle" && gameState !== "ended";
-    play.disabled = busy;
+    play.disabled = busy || !!drawReveal;
     if (next) {
-        nextBox.hidden = false;
+        nextBox.hidden = !!drawReveal;
         nextBox.appendChild(nextMatchRow(next));
-        play.textContent = busy ? "Live" : `Play · ${matchLabel(next)}`;
+        play.textContent = drawReveal ? "Drawing…" : busy ? "Live" : `Play · ${matchLabel(next)}`;
     } else if (t.stage === "done") {
         nextBox.hidden = true;
         play.textContent = "New tournament";
@@ -335,11 +348,15 @@ function renderPath(t) {
         if (!tie) continue;
         tie.legs.forEach((leg, i) => items.push({ label: round === "final" ? "Final" : `${ROUND_SHORT[round]} ${i === 0 ? "1st" : "2nd"} leg`, match: leg, tie }));
     }
-    for (const { label, match } of items) {
+    items.forEach(({ label, match }, index) => {
         const home = match.home === t.team;
         const opponent = home ? match.away : match.home;
         const row = document.createElement("div");
         row.className = "cup-path-row";
+        if (drawReveal) {
+            row.classList.add("cup-reveal");
+            row.style.animationDelay = `${index * DRAW_REVEAL_MS}ms`;
+        }
         const tag = document.createElement("span");
         tag.className = "cup-path-label";
         tag.textContent = label;
@@ -361,13 +378,13 @@ function renderPath(t) {
         }
         row.appendChild(result);
         box.appendChild(row);
-    }
+    });
 }
 
 // ---------- Akış ----------
 
 function playTournament() {
-    if (!tournament) return;
+    if (!tournament || drawReveal) return;
     if (gameState !== "idle" && gameState !== "ended") return;
     if (tournament.stage === "done") {
         tournament = null;
@@ -418,9 +435,12 @@ function shootoutNeeded() {
     return mine === theirs;
 }
 
-// Sonuç kartının alt başlığı: turnuva maçında turnuva ve tur adı
+// Sonuç kartının alt başlığı: turnuva maçında turnuva ve tur adı;
+// turnuva sürerken oynanan hazırlık maçında lig adının yanına "Friendly" (turnuva maçıyla karışmasın)
 function tournamentSubtitle() {
-    return tournamentMatch ? `${cupCompetition().name} · ${tournamentMatch.label}` : null;
+    if (tournamentMatch) return `${cupCompetition().name} · ${tournamentMatch.label}`;
+    if (tournamentActive() && activeCompetition) return `${activeCompetition.name} · Friendly${matchMode === "realistic" ? " · Realistic" : ""}`;
+    return null;
 }
 
 // Maç bittiğinde (ui.js çağırır): sonucu işle, kullanıcıya ne olduğunu söyle
@@ -428,9 +448,13 @@ function onTournamentMatchEnded() {
     const note = $("result-note");
     $("rematch-btn").hidden = !!tournamentMatch;
     if (!tournamentMatch || !tournament) {
-        note.hidden = true;
+        const friendly = tournamentActive();
+        note.textContent = friendly ? "Friendly · your tournament is not affected" : "";
+        note.classList.toggle("muted", friendly);
+        note.hidden = !friendly;
         return;
     }
+    note.classList.remove("muted");
     const t = tournament;
     const stageBefore = t.stage;
     const outcome = recordUserResult(t, score, shootoutResult);

@@ -1055,6 +1055,22 @@ select optgroup {
     text-align: center;
 }
 
+.result-note.muted {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* Kura açıklaması: rakipler sırayla belirir */
+.cup-reveal {
+    opacity: 0;
+    animation: cupReveal 0.45s ease-out forwards;
+}
+
+@keyframes cupReveal {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: none; }
+}
+
 /* ---------- İstatistikler ve olaylar ---------- */
 
 .match-stats {
@@ -1347,5 +1363,9 @@ select optgroup {
     *, *::before, *::after {
         animation: none !important;
         transition: none !important;
+    }
+
+    .cup-reveal {
+        opacity: 1;
     }
 }
