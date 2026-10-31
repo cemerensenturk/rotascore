@@ -48,6 +48,13 @@ const COUNTDOWN_MS = 3000;
 const GOAL_PAUSE_MS = 3000;
 const HALFTIME_MS = 2500;
 
+// Sessiz simülasyon: turnuvada diğer maçlar çizimsiz, sessiz ve arayüzsüz oynatılır
+let silent = false;
+const NO_SOUND = new Proxy({}, { get: () => () => false });
+function audio() {
+    return silent ? NO_SOUND : Sound;
+}
+
 let team1 = { index: 0, history: [] };
 let team2 = { index: 1, history: [] };
 let goal = { x: CENTER + FIELD_RADIUS, y: CENTER, angle: 0, speed: GOAL_SPEED };
@@ -176,6 +183,7 @@ function setupTeam(team, teamId) {
     team.initial = data.initial;
     team.logoImage = null;
     team.isFlag = !data.logo && !!data.flag;
+    if (silent) return;
     team.sprite = createBallSprite(team);
 
     // Logo/bayrak varsa yüklenince topu onunla çiz; yüklenemezse renkli top kalır
@@ -220,9 +228,44 @@ function startGame(homeId, awayId, mode) {
     resetPositions();
     gameState = "countdown";
     stateTimer = COUNTDOWN_MS;
-    Sound.startCrowd();
+    audio().startCrowd();
     uiMatchStarted();
     startLoop();
+}
+
+// Bir maçı anında, çizimsiz ve sessiz oynatır (turnuvada diğer sahalardaki maçlar için).
+// Sadece boşta çağrılır; biten maçın skoru/istatistikleri ekranda kalmaz, o yüzden sonuç kartı üretildikten sonra kullanılır.
+function simulateMatch(homeId, awayId, mode) {
+    if (gameState !== "idle" && gameState !== "ended") return null;
+    if (!teamsDatabase[homeId] || !teamsDatabase[awayId]) return null;
+    silent = true;
+    try {
+        setupTeam(team1, homeId);
+        setupTeam(team2, awayId);
+        requestedMode = mode;
+        setStrength(mode === "realistic" ? teamRating(homeId) : null, mode === "realistic" ? teamRating(awayId) : null);
+        score = [0, 0];
+        clock = { half: 1, minute: 0, added: 0, extra: 0 };
+        stats = [newStats(), newStats()];
+        matchEvents = [];
+        matchGoals = [];
+        minuteTimer = 0;
+        pressureSteps = 0;
+        keeper.form = randomBetween(KEEPER_FORM_MIN, KEEPER_FORM_MAX);
+        resetPositions();
+        gameState = "playing";
+        for (let guard = 0; gameState !== "ended" && guard < 200000; guard++) step();
+        goalParticles = [];
+        collisionEffects = [];
+        floatingTexts = [];
+        confetti = [];
+        celebration = null;
+        shakeAmount = 0;
+        return { home: homeId, away: awayId, score: [score[0], score[1]], goals: matchGoals.map(g => ({ ...g })), mode: matchMode };
+    } finally {
+        silent = false;
+        gameState = "idle";
+    }
 }
 
 // Elo puanları json/ratings.json'dan (her sabah GitHub Actions günceller): { id: { elo, kind } }
@@ -296,13 +339,13 @@ function endHalf() {
         gameState = "halftime";
         stateTimer = HALFTIME_MS;
         addEvent("halftime");
-        Sound.whistle("half");
+        audio().whistle("half");
     } else {
         gameState = "ended";
         stateTimer = 0;
         addEvent("fulltime");
-        Sound.whistle("end");
-        Sound.stopCrowd();
+        audio().whistle("end");
+        audio().stopCrowd();
         uiMatchEnded();
     }
     uiClockChanged();
@@ -313,7 +356,7 @@ function startSecondHalf() {
     minuteTimer = 0;
     resetPositions();
     gameState = "playing";
-    Sound.whistle("start");
+    audio().whistle("start");
     uiClockChanged();
 }
 
@@ -777,7 +820,7 @@ function step() {
         stateTimer -= STEP_MS;
         if (stateTimer <= 0) {
             gameState = "playing";
-            Sound.whistle("start");
+            audio().whistle("start");
             addEvent("kickoff", null, { keeperForm: keeper.form });
         }
     } else if (gameState === "playing") {
@@ -863,14 +906,14 @@ function updatePositions() {
             addFloatingText("SAVE!", hitX, hitY, "#FFD400");
             addCollisionEffect(hitX, hitY, "ball");
             addEvent("save", team, { great: result === "great-save" });
-            Sound.swell(result === "great-save" ? 0.06 : 0.03, 1);
+            audio().swell(result === "great-save" ? 0.06 : 0.03, 1);
         } else if (result === "post") {
             addFloatingText("POST!", hitX, hitY, "#FFFFFF");
             addCollisionEffect(hitX, hitY, "ball");
             shakeAmount = Math.max(shakeAmount, 4);
             addEvent("post", team);
-            Sound.tick(2.5);
-            Sound.swell(0.05, 1.2);
+            audio().tick(2.5);
+            audio().swell(0.05, 1.2);
         } else {
             addCollisionEffect(hitX, hitY, "wall");
         }
@@ -1016,7 +1059,7 @@ function scoreGoal(team) {
     addEvent("goal", team, { xg: team.lastShotXg });
     uiScoreChanged(team.index);
 
-    Sound.goal();
+    audio().goal();
 
     shakeAmount = 15;
     createGoalExplosion(goal.x, goal.y, team.color);
@@ -1195,7 +1238,7 @@ function handleCollision(ball1, ball2) {
     const impactY = (ball1.y + ball2.y) / 2;
     addCollisionEffect(impactX, impactY, "ball");
     shakeAmount = Math.max(shakeAmount, Math.min(6, -approach));
-    Sound.tick(-approach / 3);
+    audio().tick(-approach / 3);
 }
 
 // ---------- Oyun döngüsü ----------

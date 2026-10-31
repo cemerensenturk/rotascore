@@ -260,6 +260,7 @@ function setScorebugTeam(side, id) {
 }
 
 function uiMatchStarted() {
+    if (silent) return; // sessiz simülasyon ekrana dokunmaz
     setScorebugTeam("home", team1.id);
     setScorebugTeam("away", team2.id);
     $("sb-home-score").textContent = "0";
@@ -276,6 +277,7 @@ function uiMatchStarted() {
 }
 
 function uiClockChanged() {
+    if (silent) return; // sessiz simülasyon ekrana dokunmaz
     $("sb-clock-text").textContent =
         gameState === "halftime" ? "HT" :
         gameState === "ended" ? "FT" :
@@ -284,6 +286,7 @@ function uiClockChanged() {
 }
 
 function uiScoreChanged(teamIndex) {
+    if (silent) return; // sessiz simülasyon ekrana dokunmaz
     const span = $(teamIndex === 0 ? "sb-home-score" : "sb-away-score");
     span.textContent = score[teamIndex];
     span.classList.remove("bump");
@@ -337,6 +340,7 @@ function setTicker(text) {
 }
 
 function uiEvent(event) {
+    if (silent) return; // sessiz simülasyon ekrana dokunmaz
     const text = eventText(event);
     setTicker(`${event.minute} ${text}`);
     uiClockChanged();
@@ -353,6 +357,7 @@ function uiEvent(event) {
 // ---------- İstatistikler ----------
 
 function uiStatsChanged() {
+    if (silent) return; // sessiz simülasyon ekrana dokunmaz
     if (!stats.length) return;
     const totalPressure = stats[0].pressure + stats[1].pressure || 1;
     const xg = value => value.toFixed(2);
@@ -415,6 +420,7 @@ let resultBlob = null;
 let resultUrl = null;
 
 function uiMatchEnded() {
+    if (silent) return; // sessiz simülasyon ekrana dokunmaz
     $("kickoff-btn").disabled = false;
     $("kickoff-btn").textContent = "Kick off";
     // Son düdükten sonra kısa bir an bekle, sonra kartı göster
