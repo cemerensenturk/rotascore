@@ -356,7 +356,7 @@ function buildNextRound(t, previous) {
 }
 
 // Penaltılar: güçlü takım biraz daha şanslı
-function shootout(t, a, b) {
+function rollShootout(t, a, b) {
     const edge = Math.tanh(((t.ratings[a] || 1500) - (t.ratings[b] || 1500)) / 900);
     const aWins = Math.random() < 0.5 + edge * 0.25;
     const scores = [[5, 4], [4, 3], [3, 2], [4, 2], [5, 3], [6, 5], [3, 1], [7, 6]];
@@ -366,15 +366,19 @@ function shootout(t, a, b) {
 
 function settleTie(t, tie) {
     if (tie.legs.some(leg => !leg.score)) return;
+    if (tie.winner) return;
     let seedGoals = 0;
     let otherGoals = 0;
     for (const leg of tie.legs) {
         const [h, a] = leg.score;
         if (leg.home === tie.seed) { seedGoals += h; otherGoals += a; } else { seedGoals += a; otherGoals += h; }
     }
-    if (seedGoals !== otherGoals) tie.winner = seedGoals > otherGoals ? tie.seed : tie.other;
-    else {
-        tie.penalties = shootout(t, tie.seed, tie.other);
+    if (seedGoals !== otherGoals) {
+        tie.winner = seedGoals > otherGoals ? tie.seed : tie.other;
+        tie.penalties = null;
+    } else {
+        // Kullanıcının maçında penaltılar sahada atılmış olabilir (recordUserResult yazar)
+        if (!tie.penalties) tie.penalties = rollShootout(t, tie.seed, tie.other);
         tie.winner = tie.penalties[0] > tie.penalties[1] ? tie.seed : tie.other;
     }
     tie.aggregate = [seedGoals, otherGoals];
@@ -467,11 +471,14 @@ function simulateUntilUser(t, simulate) {
     }
 }
 
-// Kullanıcının bitirdiği maçı işle; tur tamamlandıysa ilerlet. Eşitlikte penaltı sonucu tie.penalties'e yazılır.
-function recordUserResult(t, score) {
+// Kullanıcının bitirdiği maçı işle; tur tamamlandıysa ilerlet.
+// penalties: sahada atılan seri [ev, deplasman]; verilmezse eşitlikte seri anında hesaplanır.
+function recordUserResult(t, score, penalties) {
     const m = pendingMatches(t).find(x => involvesUser(t, x));
     if (!m) return null;
     m.score = [score[0], score[1]];
+    const tie = t.stage === "league" ? null : tieOf(t, t.stage, t.team);
+    if (tie && penalties) tie.penalties = m.home === tie.seed ? [penalties[0], penalties[1]] : [penalties[1], penalties[0]];
     const stageBefore = t.stage;
     advanceIfRoundDone(t);
     return { stage: stageBefore, match: m, tie: stageBefore === "league" ? null : tieOf(t, stageBefore, t.team) };

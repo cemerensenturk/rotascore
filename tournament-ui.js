@@ -401,6 +401,23 @@ function playTournament() {
     if (stage.top < 0 || stage.bottom > window.innerHeight) $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+// Motor maç sonunda sorar: eleme turunun son maçı bitti ve toplam skor eşit mi? Öyleyse penaltılar oynanır.
+function shootoutNeeded() {
+    if (!tournamentMatch || !tournament) return false;
+    const next = nextUserMatch(tournament);
+    if (!next || !next.tie) return false;
+    const legs = next.tie.legs;
+    if (next.leg !== legs.length) return false; // ilk maçta penaltı yok
+    let mine = score[team1.id === tournament.team ? 0 : 1];
+    let theirs = score[team1.id === tournament.team ? 1 : 0];
+    if (legs.length === 2) {
+        const first = legs[0];
+        mine += first.home === tournament.team ? first.score[0] : first.score[1];
+        theirs += first.home === tournament.team ? first.score[1] : first.score[0];
+    }
+    return mine === theirs;
+}
+
 // Sonuç kartının alt başlığı: turnuva maçında turnuva ve tur adı
 function tournamentSubtitle() {
     return tournamentMatch ? `${cupCompetition().name} · ${tournamentMatch.label}` : null;
@@ -416,7 +433,7 @@ function onTournamentMatchEnded() {
     }
     const t = tournament;
     const stageBefore = t.stage;
-    const outcome = recordUserResult(t, score);
+    const outcome = recordUserResult(t, score, shootoutResult);
     tournamentMatch = null;
     saveTournament();
     renderMode();

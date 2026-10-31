@@ -308,7 +308,7 @@ function uiScoreChanged(teamIndex) {
 
 // ---------- Maç olayları ----------
 
-const eventIcons = { goal: "⚽", save: "🧤", post: "🥅", added: "⏱", kickoff: "▶", halftime: "⏸", fulltime: "🏁" };
+const eventIcons = { goal: "⚽", save: "🧤", post: "🥅", added: "⏱", kickoff: "▶", halftime: "⏸", fulltime: "🏁", shootout: "🎯", penalty: "🎯" };
 
 function eventText(event) {
     const team = event.team === null ? null : (event.team === 0 ? team1 : team2);
@@ -321,7 +321,10 @@ function eventText(event) {
         case "added": return `${event.added} minute${event.added > 1 ? "s" : ""} added`;
         case "kickoff": return `Kick-off: ${team1.name} vs ${team2.name}${modeText()}${keeperFormText(event.keeperForm)}`;
         case "halftime": return `Half-time: ${score[0]} - ${score[1]}`;
-        case "fulltime": return `Full-time: ${team1.name} ${score[0]} - ${score[1]} ${team2.name}`;
+        case "shootout": return "Level on aggregate · penalty shoot-out";
+        case "penalty": return `${team.name} ${event.scored ? "score" : event.result === "save" ? "saved by the keeper" : event.result === "post" ? "hit the post" : "miss"} · ${event.tally}`;
+        case "fulltime": return `Full-time: ${team1.name} ${score[0]} - ${score[1]} ${team2.name}${shootoutResult
+            ? ` · ${shootoutResult[0] > shootoutResult[1] ? team1.name : team2.name} win ${Math.max(...shootoutResult)}-${Math.min(...shootoutResult)} on penalties` : ""}`;
         default: return "";
     }
 }
@@ -586,7 +589,7 @@ async function buildResultCard() {
     // Başlık
     c.fillStyle = "#6AD04A";
     c.font = "800 34px Inter, Arial, sans-serif";
-    c.fillText("FULL-TIME", size / 2, 92);
+    c.fillText(shootoutResult ? `FULL-TIME · PENS ${shootoutResult[0]}-${shootoutResult[1]}` : "FULL-TIME", size / 2, 92);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 30px Inter, Arial, sans-serif";
     const subtitle = tournamentSubtitle() || ((activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : ""));

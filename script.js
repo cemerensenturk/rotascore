@@ -226,6 +226,8 @@ function startGame(homeId, awayId, mode) {
     shakeAmount = 0;
 
     keeper.form = randomBetween(KEEPER_FORM_MIN, KEEPER_FORM_MAX);
+    shootout = null;
+    shootoutResult = null;
     resetPositions();
     gameState = "countdown";
     stateTimer = COUNTDOWN_MS;
@@ -307,6 +309,7 @@ function newStats() {
 }
 
 function clockLabel() {
+    if (gameState === "shootout") return "PENS";
     return clock.extra > 0 ? `${clock.minute}+${clock.extra}'` : `${clock.minute}'`;
 }
 
@@ -341,15 +344,263 @@ function endHalf() {
         stateTimer = HALFTIME_MS;
         addEvent("halftime");
         audio().whistle("half");
+    } else if (!silent && typeof shootoutNeeded === "function" && shootoutNeeded()) {
+        // Eleme turunda toplam skor eşit: düdük yerine penaltılar (tournament-ui.js karar verir)
+        startShootout();
     } else {
-        gameState = "ended";
-        stateTimer = 0;
-        addEvent("fulltime");
-        audio().whistle("end");
-        audio().stopCrowd();
-        uiMatchEnded();
+        finishMatch();
     }
     uiClockChanged();
+}
+
+function finishMatch() {
+    gameState = "ended";
+    stateTimer = 0;
+    addEvent("fulltime");
+    audio().whistle("end");
+    audio().stopCrowd();
+    uiMatchEnded();
+}
+
+// ---------- Penaltılar ----------
+// Sonuç önce olasılıkla belirlenir (vuran takımın Elo üstünlüğü biraz etkiler), sonra sahada oynatılır:
+// top noktadan kaleye gider, kaleci bir tarafa plonjon yapar. 5'er atış, gerekirse seri devam eder.
+
+const PEN_SPOT = 115;        // Penaltı noktasının kaleye uzaklığı
+const PEN_SPEED = 4.2;       // Vuruşun hızı (adım başına)
+const PEN_PLACE_MS = 1000;   // Top noktaya konur, bekleme
+const PEN_RESULT_MS = 1200;  // Sonuç görünür
+const PEN_DONE_MS = 2800;    // Kazanan yazısı
+const PEN_SCORE_BASE = 0.76; // Gol olasılığı (Elo farkı ±0.08 oynatır)
+
+let shootout = null;         // { kicks: [[bool], [bool]], turn, phase, timer, aim, outcome, winner }
+let shootoutResult = null;   // Seri yapıldıysa [ev, deplasman] penaltı skoru
+
+function startShootout() {
+    gameState = "shootout";
+    shootoutResult = null;
+    shootout = { kicks: [[], []], turn: 0, phase: "place", timer: PEN_PLACE_MS, aim: 0, outcome: null, winner: null, travelled: 0 };
+    goal.angle = 0;
+    updateGoalPosition();
+    keeper.pos = 0;
+    keeper.dive = null;
+    keeper.seen = [];
+    for (const team of [team1, team2]) {
+        team.history = [];
+        team.dx = 0;
+        team.dy = 0;
+        team.spin = 0;
+        team.x = -1000;
+        team.y = -1000;
+    }
+    placePenalty();
+    addEvent("shootout");
+    audio().whistle("start");
+}
+
+function shooterTeam() {
+    return shootout.turn === 0 ? team1 : team2;
+}
+
+// Kale çizgisinde "offset" kadar yana kaymış nokta (offsetAlongGoal ile aynı yön)
+function pointOnGoalLine(offset) {
+    const radian = (goal.angle * Math.PI) / 180;
+    return { x: goal.x + offset * Math.sin(radian), y: goal.y - offset * Math.cos(radian) };
+}
+
+function placePenalty() {
+    const shooter = shooterTeam();
+    const radian = (goal.angle * Math.PI) / 180;
+    shooter.x = goal.x - Math.cos(radian) * PEN_SPOT;
+    shooter.y = goal.y - Math.sin(radian) * PEN_SPOT;
+    shooter.dx = 0;
+    shooter.dy = 0;
+    shooter.history = [];
+    keeper.pos = 0;
+    keeper.dive = null;
+}
+
+function kickPenalty() {
+    const s = shootout;
+    const shooter = shooterTeam();
+    const pScore = Math.min(0.9, Math.max(0.55, PEN_SCORE_BASE + 0.08 * (shooter.edge || 0)));
+    const roll = Math.random();
+    s.outcome = roll < pScore ? "goal" : roll < pScore + (1 - pScore) * 0.72 ? "save" : (Math.random() < 0.45 ? "post" : "wide");
+    const side = Math.random() < 0.5 ? -1 : 1;
+    if (s.outcome === "goal") s.aim = side * randomBetween(6, GOAL_HEIGHT / 2 - 4);
+    else if (s.outcome === "save") s.aim = side * randomBetween(0, 18);
+    else if (s.outcome === "post") s.aim = side * (GOAL_HEIGHT / 2 + randomBetween(1, 6));
+    else s.aim = side * (GOAL_HEIGHT / 2 + randomBetween(14, 26));
+    // Kaleci: kurtarışta doğru tarafa, golde çoğunlukla yanlış tarafa gider
+    s.keeperTarget = s.outcome === "save" ? s.aim : (Math.random() < 0.7 ? -side : side) * randomBetween(8, 22);
+    s.keeperDelay = 6;
+    const target = pointOnGoalLine(s.aim);
+    const distance = Math.hypot(target.x - shooter.x, target.y - shooter.y);
+    shooter.dx = ((target.x - shooter.x) / distance) * PEN_SPEED;
+    shooter.dy = ((target.y - shooter.y) / distance) * PEN_SPEED;
+    shooter.spin = 0;
+    s.travelled = 0;
+    // Normal oyundaki gibi topun kenarı çizgiye değince karar verilir (top sahadan taşmasın)
+    s.distance = distance - BALL_RADIUS + 3;
+    s.phase = "kick";
+    audio().tick(2);
+}
+
+function resolvePenalty() {
+    const s = shootout;
+    const shooter = shooterTeam();
+    const scored = s.outcome === "goal";
+    s.kicks[s.turn].push(scored);
+    const limit = (GOAL_HEIGHT - KEEPER_SIZE) / 2;
+    if (scored) {
+        createGoalExplosion(shooter.x, shooter.y, shooter.color);
+        addFloatingText("GOAL!", shooter.x, shooter.y, "#6AD04A");
+        setSpeed(shooter, 0.8);
+        audio().goal();
+    } else if (s.outcome === "save") {
+        keeper.pos = Math.max(-limit, Math.min(limit, s.aim));
+        keeper.dive = { side: Math.sign(s.aim) || 1, elapsed: 0 };
+        shooter.dx *= -0.35;
+        shooter.dy *= -0.35;
+        addFloatingText("SAVED!", shooter.x, shooter.y, "#FFD400");
+        addCollisionEffect(shooter.x, shooter.y, "wall");
+        audio().tick(4);
+    } else if (s.outcome === "post") {
+        shooter.dx *= -0.5;
+        shooter.dy *= -0.5;
+        rotateVelocity(shooter, randomBetween(-0.6, 0.6));
+        addFloatingText("POST!", shooter.x, shooter.y, "#FFFFFF");
+        addCollisionEffect(shooter.x, shooter.y, "wall");
+        shakeAmount = 6;
+        audio().tick(4);
+    } else {
+        setSpeed(shooter, 1.2);
+        addFloatingText("WIDE!", shooter.x, shooter.y, "#FFFFFF");
+    }
+    const tally = shootoutTally();
+    addEvent("penalty", shooter, { scored, result: s.outcome, tally: `${tally[0]}-${tally[1]}` });
+    s.phase = "result";
+    s.timer = PEN_RESULT_MS;
+}
+
+function shootoutTally() {
+    return shootout.kicks.map(kicks => kicks.filter(Boolean).length);
+}
+
+// Kazanan belli oldu mu? İlk 5'te yetişilemeyecek fark, sonra eşit atışta fark
+function shootoutDecided() {
+    const [a, b] = shootoutTally();
+    const [na, nb] = shootout.kicks.map(kicks => kicks.length);
+    if (na <= 5 && nb <= 5) {
+        if (a > b + (5 - nb)) return 0;
+        if (b > a + (5 - na)) return 1;
+        if (na === 5 && nb === 5 && a !== b) return a > b ? 0 : 1;
+        return null;
+    }
+    if (na === nb && a !== b) return a > b ? 0 : 1;
+    return null;
+}
+
+function updateShootout() {
+    const s = shootout;
+    const shooter = shooterTeam();
+    s.timer -= STEP_MS;
+    if (s.phase === "place") {
+        if (s.timer <= 0) kickPenalty();
+    } else if (s.phase === "kick") {
+        shooter.history.unshift({ x: shooter.x, y: shooter.y });
+        if (shooter.history.length > TRAIL_LENGTH) shooter.history.pop();
+        shooter.x += shooter.dx;
+        shooter.y += shooter.dy;
+        s.travelled += PEN_SPEED;
+        // Kaleci kısa bir gecikmeyle seçtiği tarafa kayar
+        if (s.keeperDelay > 0) s.keeperDelay--;
+        else {
+            const limit = (GOAL_HEIGHT - KEEPER_SIZE) / 2;
+            const target = Math.max(-limit, Math.min(limit, s.keeperTarget));
+            const speed = KEEPER_SPEED * 1.6;
+            keeper.pos += Math.max(-speed, Math.min(speed, target - keeper.pos));
+        }
+        if (s.travelled >= s.distance) {
+            if (!keeper.dive) keeper.dive = { side: Math.sign(s.keeperTarget) || 1, elapsed: 0 };
+            resolvePenalty();
+        }
+    } else if (s.phase === "result") {
+        shooter.x += shooter.dx;
+        shooter.y += shooter.dy;
+        shooter.dx *= 0.93;
+        shooter.dy *= 0.93;
+        if (s.timer <= 0) {
+            const winner = shootoutDecided();
+            if (winner !== null) {
+                s.winner = winner;
+                s.phase = "done";
+                s.timer = PEN_DONE_MS;
+                shootoutResult = shootoutTally();
+                audio().whistle("end");
+            } else {
+                shooter.x = -1000;
+                shooter.y = -1000;
+                shooter.history = [];
+                s.turn = 1 - s.turn;
+                s.phase = "place";
+                s.timer = PEN_PLACE_MS;
+                placePenalty();
+            }
+        }
+    } else if (s.phase === "done") {
+        if (s.timer <= 0) {
+            s.phase = "over";
+            finishMatch();
+        }
+    }
+}
+
+// Üstte iki sıra: takım kısaltması ve atışlar (yeşil gol, kırmızı kaçan, boş sıradaki)
+function drawShootout() {
+    const s = shootout;
+    const rounds = Math.max(5, ...s.kicks.map(kicks => kicks.length));
+    const dot = 11;
+    const width = 70 + rounds * dot + 24;
+    const x = CENTER - width / 2;
+    const y = 36;
+    ctx.fillStyle = "rgba(5, 10, 18, 0.72)";
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, 58, 10);
+    ctx.fill();
+    ctx.font = "800 10px Inter, Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.fillText("PENALTIES", CENTER, y + 10);
+    [team1, team2].forEach((team, index) => {
+        const rowY = y + 28 + index * 18;
+        ctx.textAlign = "left";
+        ctx.fillStyle = index === s.turn && s.phase !== "done" ? "#FFFFFF" : "rgba(255, 255, 255, 0.7)";
+        ctx.font = "800 12px Inter, Arial, sans-serif";
+        ctx.fillText(team.initial, x + 12, rowY);
+        for (let i = 0; i < rounds; i++) {
+            const kick = s.kicks[index][i];
+            ctx.beginPath();
+            ctx.arc(x + 58 + i * dot + dot / 2, rowY, 4, 0, Math.PI * 2);
+            if (kick === undefined) {
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = kick ? "#6AD04A" : "#E05C5C";
+                ctx.fill();
+            }
+        }
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(String(shootoutTally()[index]), x + width - 10, rowY);
+    });
+    if (s.phase === "done") {
+        const winner = s.winner === 0 ? team1 : team2;
+        const [a, b] = shootoutTally();
+        drawBanner(`${winner.initial} WIN`, `${a}-${b} on penalties`, 1);
+    }
 }
 
 function startSecondHalf() {
@@ -809,8 +1060,12 @@ function render() {
         drawCelebration();
     } else if (gameState === "halftime") {
         drawBanner("HALF-TIME", `${team1.initial} ${score[0]} - ${score[1]} ${team2.initial}`, 1);
+    } else if (gameState === "shootout") {
+        drawShootout();
     } else if (gameState === "ended" && !goalParticles.length) {
-        drawBanner("FULL-TIME", `${team1.initial} ${score[0]} - ${score[1]} ${team2.initial}`, 1);
+        drawBanner("FULL-TIME", shootoutResult
+            ? `${team1.initial} ${score[0]} - ${score[1]} ${team2.initial} · pens ${shootoutResult[0]}-${shootoutResult[1]}`
+            : `${team1.initial} ${score[0]} - ${score[1]} ${team2.initial}`, 1);
     }
 }
 
@@ -846,6 +1101,8 @@ function step() {
     } else if (gameState === "halftime") {
         stateTimer -= STEP_MS;
         if (stateTimer <= 0) startSecondHalf();
+    } else if (gameState === "shootout") {
+        updateShootout();
     }
 
     updateEffects();
