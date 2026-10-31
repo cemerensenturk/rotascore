@@ -544,7 +544,8 @@ async function buildTournamentCard(t) {
     const columns = items.length > 8 ? 2 : 1;
     const perColumn = Math.ceil(items.length / columns);
     const colWidth = (size - 180) / columns;
-    const rowHeight = 36;
+    // En uzun yol 17 maç (play-off'tan finale): satırlar alt bilgiye taşmasın diye aralık daralır
+    const rowHeight = Math.min(36, Math.floor(256 / Math.max(1, perColumn - 1)));
     items.forEach((item, i) => {
         const col = Math.floor(i / perColumn);
         const x = 90 + col * colWidth;
@@ -554,14 +555,21 @@ async function buildTournamentCard(t) {
         c.font = "700 20px Inter, Arial, sans-serif";
         c.fillText(item.label, x, y);
         c.fillStyle = "#FFFFFF";
-        c.font = "600 24px Inter, Arial, sans-serif";
+        const nameSize = columns === 2 ? 22 : 24;
+        c.font = `600 ${nameSize}px Inter, Arial, sans-serif`;
+        // Skor sağda (penaltılıysa daha geniş), isim kalan yere sığmazsa kırpılır
+        const scoreText = `${item.mine}-${item.theirs}${item.pens}`;
+        c.font = `800 ${nameSize}px Inter, Arial, sans-serif`;
+        const scoreWidth = c.measureText(scoreText).width;
+        c.font = `600 ${nameSize}px Inter, Arial, sans-serif`;
         let label = `${item.opponent} (${item.home ? "H" : "A"})`;
-        while (c.measureText(label).width > colWidth - 230 && label.length > 4) label = `${label.slice(0, -2).trimEnd()}…`;
-        c.fillText(label, x + 90, y);
+        const maxName = colWidth - 80 - scoreWidth - 44;
+        while (c.measureText(label).width > maxName && label.length > 4) label = `${label.slice(0, -2).trimEnd()}…`;
+        c.fillText(label, x + 80, y);
         c.textAlign = "right";
         c.fillStyle = item.mine > item.theirs ? "#6AD04A" : item.mine < item.theirs ? "#FF7A7A" : "#E0B84A";
-        c.font = "800 24px Inter, Arial, sans-serif";
-        c.fillText(`${item.mine}-${item.theirs}${item.pens}`, x + colWidth - 30, y);
+        c.font = `800 ${nameSize}px Inter, Arial, sans-serif`;
+        c.fillText(scoreText, x + colWidth - 30, y);
     });
 
     // Alt bilgi
