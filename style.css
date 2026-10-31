@@ -757,10 +757,11 @@ select optgroup {
     gap: 12px;
 }
 
-/* display: flex, hidden özniteliğini ezmesin */
+/* display: flex/grid, hidden özniteliğini ezmesin */
 .cup-setup[hidden],
 .cup-live[hidden],
-.cup-next[hidden] {
+.cup-next[hidden],
+.result-actions[hidden] {
     display: none;
 }
 
