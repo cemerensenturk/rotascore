@@ -3,6 +3,7 @@
 //
 // Kaynaklar:
 //   Kulüpler:       Club Elo (api.clubelo.com) – CSV: Rank,Club,Country,Level,Elo,From,To
+//                   yanıt vermezse footballdatabase.com dünya sıralaması (aynı ölçekte Elo puanı, HTML sayfalar)
 //   Milli takımlar: eloratings.net (World.tsv + en.teams.tsv)
 // Kaynaklardan biri o gün yanıt vermezse o kısmın önceki puanları korunur.
 //
@@ -60,12 +61,46 @@ function resolveClub(name, country) {
 }
 
 async function fetchText(url) {
-    const response = await fetch(url, { headers: { "User-Agent": "RotaScore ratings (https://cemeren.dev/rotascore)" } });
+    const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (compatible; RotaScore ratings; https://cemeren.dev/rotascore)" } });
     if (!response.ok) throw new Error(`${url}: ${response.status}`);
     return response.text();
 }
 
+// footballdatabase.com ülke adları -> Club Elo ülke kodları (resolveClub önce o ligin takımlarında arar)
+const FDB_COUNTRY = { England: "ENG", Spain: "ESP", Germany: "GER", Italy: "ITA", France: "FRA", Turkey: "TUR" };
+
 async function clubRatings() {
+    try {
+        return await clubRatingsFromClubElo();
+    } catch (error) {
+        console.log(`Club Elo alınamadı (${error.message}), footballdatabase.com deneniyor`);
+        return clubRatingsFromFootballDatabase();
+    }
+}
+
+// Sayfalar 50'şer kulüp; bizim kulüplerimizin hepsi bulunana ya da sayfalar bitene kadar sırayla okunur
+async function clubRatingsFromFootballDatabase() {
+    const ourClubs = new Set(Object.keys(teams).filter(id => !nationalIds.has(id)));
+    const ratings = {};
+    const decode = text => text.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code)).replace(/&amp;/g, "&").replace(/&#39;/g, "'");
+    const row = /<td class="rank">\d+<\/td><td class="club text-left"><a href="\/clubs-ranking\/[^"]+" title="([^"]+) \(([^)]+)\)">.*?<td class="rank">(\d+)<\/td>/g;
+    for (let page = 1; page <= 80 && Object.keys(ratings).length < ourClubs.size; page++) {
+        const html = await fetchText(`https://footballdatabase.com/ranking/world/${page}`);
+        let found = 0;
+        for (const [, name, country, points] of html.matchAll(row)) {
+            found++;
+            const id = resolveClub(decode(name), FDB_COUNTRY[country]);
+            if (id && ourClubs.has(id) && !ratings[id]) ratings[id] = Number(points);
+        }
+        if (!found) break;
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    if (Object.keys(ratings).length < ourClubs.size / 2) throw new Error("footballdatabase.com: kulüplerin yarısından azı bulundu");
+    const missing = [...ourClubs].filter(id => !ratings[id]).map(id => teams[id].name);
+    return { ratings, missing };
+}
+
+async function clubRatingsFromClubElo() {
     const csv = await fetchText(`http://api.clubelo.com/${today}`);
     const [header, ...rows] = csv.trim().split("\n");
     const columns = header.split(",");
