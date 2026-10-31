@@ -197,6 +197,7 @@ function drawLeaguePhase(teams, ratings, countries, format) {
             for (const m of part) {
                 if (countries[m.home] && countries[m.home] === countries[m.away]) return false;
                 for (const [team, other] of [[m.home, m.away], [m.away, m.home]]) {
+                    if (!countries[other]) continue; // ülkesi bilinmeyen takım bu kurala girmez
                     const key = `${team}|${countries[other]}`;
                     added[key] = (added[key] || 0) + 1;
                     if ((opponents[team][countries[other]] || 0) + added[key] > 2) return false;
@@ -206,8 +207,8 @@ function drawLeaguePhase(teams, ratings, countries, format) {
         };
         const commit = part => {
             for (const m of part) {
-                opponents[m.home][countries[m.away]] = (opponents[m.home][countries[m.away]] || 0) + 1;
-                opponents[m.away][countries[m.home]] = (opponents[m.away][countries[m.home]] || 0) + 1;
+                if (countries[m.away]) opponents[m.home][countries[m.away]] = (opponents[m.home][countries[m.away]] || 0) + 1;
+                if (countries[m.home]) opponents[m.away][countries[m.home]] = (opponents[m.away][countries[m.home]] || 0) + 1;
             }
             matches.push(...part);
         };

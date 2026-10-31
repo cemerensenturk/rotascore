@@ -96,7 +96,8 @@ let teamsDatabase = {};
 let competitions = [];
 
 async function loadJson(file) {
-    const response = await fetch(`./json/${file}`);
+    // Takım listesi değişince eski kopya kalmasın: tarayıcı her açılışta sunucuyla doğrular
+    const response = await fetch(`./json/${file}`, { cache: "no-cache" });
     if (!response.ok) throw new Error(`${file} yüklenemedi: ${response.status}`);
     return response.json();
 }
