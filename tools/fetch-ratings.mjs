@@ -89,8 +89,11 @@ async function clubRatingsFromFootballDatabase() {
         let found = 0;
         for (const [, name, country, points] of html.matchAll(row)) {
             found++;
-            const id = resolveClub(decode(name), FDB_COUNTRY[country]);
-            if (id && ourClubs.has(id) && !ratings[id]) ratings[id] = Number(points);
+            const label = decode(name);
+            const id = resolveClub(label, FDB_COUNTRY[country]);
+            // Aynı adlı başka ülke kulübü (ör. Kongo'daki "Ajax") bizimkinin puanını almasın; elle eşlenen adlara güvenilir
+            const trusted = !!aliases.clubs[label] || !teams[id]?.country || teams[id].country === country;
+            if (id && ourClubs.has(id) && !ratings[id] && trusted) ratings[id] = Number(points);
         }
         if (!found) break;
         await new Promise(resolve => setTimeout(resolve, 300));

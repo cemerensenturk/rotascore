@@ -1,6 +1,6 @@
 {
- "date": "2026-10-31",
- "generatedAt": "2026-10-31T20:54:09.810Z",
+ "date": "2026-11-01",
+ "generatedAt": "2026-10-31T21:38:44.668Z",
  "clubs": {
   "bayern-munich": 2072,
   "arsenal": 2065,
@@ -64,6 +64,7 @@
   "bologna": 1668,
   "slavia-prag": 1668,
   "omonya": 1664,
+  "ajax": 1658,
   "mainz": 1652,
   "celta-vigo": 1652,
   "ferencvaros": 1649,
@@ -223,7 +224,6 @@
   "bodrum_fk": 1358,
   "cercle-brugge": 1354,
   "lillestrom": 1353,
-  "ajax": 1352,
   "troyes": 1351,
   "kayserispor": 1350,
   "antalyaspor": 1344,
