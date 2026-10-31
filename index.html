@@ -14,7 +14,7 @@
     <title>RotaScore by Kafeinal</title>
     <!-- Site Cloudflare arkasında: CSS/JS 7 gün önbellekte kalır.
          Bu dosyalardan biri değişince ?v= değerini güncelle, ziyaretçiler hemen yenisini alır. -->
-    <link rel="stylesheet" href="style.css?v=2026-10-31.1">
+    <link rel="stylesheet" href="style.css?v=2026-10-31.2">
     <link rel="icon" type="image/x-icon" href="./img/favicon.png">
 </head>
 <body>
@@ -61,7 +61,7 @@
                 <button class="icon-btn info-btn" id="mode-info-btn" type="button" aria-label="About game modes">i</button>
             </div>
             <div class="tabs tabs-3" role="tablist">
-                <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Pick teams</button>
+                <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Friendly</button>
                 <button class="tab" id="tab-today" type="button" role="tab" data-tab="today" aria-selected="false">Fixtures <span class="tab-count" id="today-count"></span></button>
                 <button class="tab" id="tab-tournament" type="button" role="tab" data-tab="tournament" aria-selected="false">Tournament</button>
             </div>
@@ -116,13 +116,18 @@
                     <p class="cup-out" id="cup-out" hidden></p>
                     <div class="cup-next" id="cup-next"></div>
                     <button class="primary" id="tournament-play" type="button">Play</button>
-                    <details class="today-league" id="cup-table-section" open>
-                        <summary><span>League table</span><span class="today-league-count" id="cup-table-count"></span></summary>
-                        <div class="cup-table" id="cup-table"></div>
-                    </details>
+                    <!-- Takımın turnuvası bitince: özet kartını paylaş -->
+                    <div class="result-actions" id="cup-share-row" hidden>
+                        <button class="secondary" id="cup-share-btn" type="button">Share my run</button>
+                        <button class="secondary" id="cup-download-btn" type="button">Download</button>
+                    </div>
                     <details class="today-league" id="cup-bracket-section" hidden>
                         <summary><span>Knock-out stage</span></summary>
                         <div class="cup-bracket" id="cup-bracket"></div>
+                    </details>
+                    <details class="today-league" id="cup-table-section" open>
+                        <summary><span>League table</span><span class="today-league-count" id="cup-table-count"></span></summary>
+                        <div class="cup-table" id="cup-table"></div>
                     </details>
                     <details class="today-league" id="cup-path-section">
                         <summary><span>Your matches</span></summary>
@@ -217,7 +222,7 @@
     <script src="xg-table.js?v=2026-10-28.2"></script>
     <script src="script.js?v=2026-10-31.1"></script>
     <script src="tournament.js?v=2026-10-31.1"></script>
-    <script src="ui.js?v=2026-10-31.1"></script>
-    <script src="tournament-ui.js?v=2026-10-31.1"></script>
+    <script src="ui.js?v=2026-10-31.2"></script>
+    <script src="tournament-ui.js?v=2026-10-31.2"></script>
 </body>
 </html>

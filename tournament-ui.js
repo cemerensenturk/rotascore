@@ -193,6 +193,9 @@ function renderTournament() {
         play.textContent = "Simulate play-offs";
     }
 
+    // Takımın turnuvası bittiyse (elendi ya da turnuva tamamlandı) özet kartı paylaşılabilir
+    $("cup-share-row").hidden = !(t.userOut || t.stage === "done");
+    $("cup-share-btn").hidden = !canShareFiles();
     renderCupTable(t);
     renderBracket(t);
     renderPath(t);
@@ -266,10 +269,18 @@ function renderCupTable(t) {
     });
 }
 
+// Lig aşaması bitince eleme ağacı açık, tablo kapalı gelsin
+function openKnockoutView() {
+    $("cup-bracket-section").open = true;
+    $("cup-table-section").open = false;
+    $("cup-path-section").open = false;
+}
+
+// Finale en yakın tur en üstte
 function renderBracket(t) {
     const box = $("cup-bracket");
     box.innerHTML = "";
-    for (const round of KNOCKOUT_ROUNDS) {
+    for (const round of KNOCKOUT_ROUNDS.slice().reverse()) {
         const ties = t.rounds[round];
         if (!ties) continue;
         const heading = document.createElement("h3");
@@ -365,11 +376,17 @@ function playTournament() {
         renderTournament();
         return;
     }
+    // Kullanıcının oynayacağı maç yoksa (ilk 8'de play-off'u atlıyor ya da elendi) sadece simüle et;
+    // maç kullanıcı bir daha dokununca başlar, arada sonuçlar incelenebilir
+    const stageBefore = tournament.stage;
+    const hadMatch = !!nextUserMatch(tournament);
     // Diğer sahalardaki maçlar anında oynanır
     simulateUntilUser(tournament, (home, away) => simulateMatch(home, away, tournament.mode).score);
     saveTournament();
-    const next = nextUserMatch(tournament);
+    if (tournament.stage !== stageBefore) openKnockoutView();
     renderTournament();
+    if (!hadMatch) return;
+    const next = nextUserMatch(tournament);
     if (!next) return;
 
     tournamentMatch = { label: matchLabel(next) };
@@ -398,10 +415,12 @@ function onTournamentMatchEnded() {
         return;
     }
     const t = tournament;
+    const stageBefore = t.stage;
     const outcome = recordUserResult(t, score);
     tournamentMatch = null;
     saveTournament();
     renderMode();
+    if (stageBefore === "league" && t.stage !== "league") openKnockoutView();
     renderTournament();
 
     let text = "";
@@ -429,7 +448,170 @@ function onTournamentMatchEnded() {
     note.hidden = !text;
 }
 
+// ---------- Turnuva özeti kartı ----------
+
+function cupHeadline(t) {
+    if (t.champion === t.team) return "CHAMPIONS!";
+    if (t.userOut === "final") return "Runners-up";
+    if (t.userOut === "sf") return "Semi-finalists";
+    if (t.userOut === "qf") return "Quarter-finalists";
+    if (t.userOut === "r16") return "Out in the round of 16";
+    if (t.userOut === "playoffs") return "Out in the play-offs";
+    if (t.userOut === "league") return `Out in the league phase · ${ordinal(leaguePosition(t, t.team))}`;
+    return "In progress";
+}
+
+// Kullanıcının oynanmış bütün maçları: { label, opponent, home, mine, theirs, pens }
+function cupPathItems(t) {
+    const items = [];
+    t.league.matchdays.forEach((round, i) => {
+        const m = round.find(x => x.home === t.team || x.away === t.team);
+        if (m && m.score) items.push({ label: `MD${i + 1}`, match: m });
+    });
+    for (const round of KNOCKOUT_ROUNDS) {
+        const tie = tieOf(t, round, t.team);
+        if (!tie) continue;
+        tie.legs.forEach((leg, i) => {
+            if (!leg.score) return;
+            const label = round === "final" ? "Final" : `${ROUND_SHORT[round]} ${tie.legs.length > 1 ? (i === 0 ? "L1" : "L2") : ""}`.trim();
+            items.push({ label, match: leg, tie, lastLeg: i === tie.legs.length - 1 });
+        });
+    }
+    return items.map(({ label, match, tie, lastLeg }) => {
+        const home = match.home === t.team;
+        const mine = home ? match.score[0] : match.score[1];
+        const theirs = home ? match.score[1] : match.score[0];
+        const pens = tie && lastLeg && tie.penalties ? ` (${tie.seed === t.team ? tie.penalties.join("-") : tie.penalties.slice().reverse().join("-")} p)` : "";
+        return { label, opponent: teamData(home ? match.away : match.home).name, home, mine, theirs, pens };
+    });
+}
+
+async function buildTournamentCard(t) {
+    const size = 1080;
+    const card = document.createElement("canvas");
+    card.width = size;
+    card.height = size;
+    const c = card.getContext("2d");
+    try {
+        await document.fonts.load("800 100px Inter");
+    } catch (error) {
+        // Arial ile devam
+    }
+    const cup = cupCompetition();
+    const colors = teamData(t.team).colors;
+
+    const bg = c.createLinearGradient(0, 0, 0, size);
+    bg.addColorStop(0, "#0b1220");
+    bg.addColorStop(1, "#123b22");
+    c.fillStyle = bg;
+    c.fillRect(0, 0, size, size);
+    for (const [index, x] of [[0, 0], [1, size]]) {
+        const glow = c.createRadialGradient(x, 360, 0, x, 360, 560);
+        glow.addColorStop(0, `${colors[index]}55`);
+        glow.addColorStop(1, `${colors[index]}00`);
+        c.fillStyle = glow;
+        c.fillRect(0, 0, size, size);
+    }
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+
+    // Başlık: turnuva adı ve mod
+    c.fillStyle = "#6AD04A";
+    c.font = "800 34px Inter, Arial, sans-serif";
+    c.fillText(cup.name.replace("UEFA ", "").toUpperCase(), size / 2, 84);
+    c.fillStyle = "rgba(255, 255, 255, 0.7)";
+    c.font = "600 28px Inter, Arial, sans-serif";
+    c.fillText(`${t.mode === "realistic" ? "Realistic" : "Classic"} mode${t.champion ? ` · Champions: ${teamData(t.champion).name}` : ""}`, size / 2, 128);
+
+    // Takım
+    await drawCardBadge(c, { id: t.team, isFlag: false }, size / 2, 300, 120);
+    c.fillStyle = "#FFFFFF";
+    fitFont(c, teamData(t.team).name, 800, 56, 800);
+    c.fillText(teamData(t.team).name, size / 2, 468);
+
+    // Sonuç
+    const headline = cupHeadline(t);
+    c.fillStyle = t.champion === t.team ? "#FFD84A" : "#6AD04A";
+    fitFont(c, headline, 900, 72, 800);
+    c.fillText(headline, size / 2, 548);
+    const table = standings(t).find(row => row.id === t.team);
+    c.fillStyle = "rgba(255, 255, 255, 0.7)";
+    c.font = "600 28px Inter, Arial, sans-serif";
+    c.fillText(`League phase ${ordinal(leaguePosition(t, t.team))} · ${table.won}W ${table.drawn}D ${table.lost}L · ${table.gf}-${table.ga}`, size / 2, 604);
+
+    // Yol: tek ya da iki sütun
+    const items = cupPathItems(t);
+    const columns = items.length > 8 ? 2 : 1;
+    const perColumn = Math.ceil(items.length / columns);
+    const colWidth = (size - 180) / columns;
+    const rowHeight = 36;
+    items.forEach((item, i) => {
+        const col = Math.floor(i / perColumn);
+        const x = 90 + col * colWidth;
+        const y = 668 + (i % perColumn) * rowHeight;
+        c.textAlign = "left";
+        c.fillStyle = "rgba(255, 255, 255, 0.55)";
+        c.font = "700 20px Inter, Arial, sans-serif";
+        c.fillText(item.label, x, y);
+        c.fillStyle = "#FFFFFF";
+        c.font = "600 24px Inter, Arial, sans-serif";
+        let label = `${item.opponent} (${item.home ? "H" : "A"})`;
+        while (c.measureText(label).width > colWidth - 230 && label.length > 4) label = `${label.slice(0, -2).trimEnd()}…`;
+        c.fillText(label, x + 90, y);
+        c.textAlign = "right";
+        c.fillStyle = item.mine > item.theirs ? "#6AD04A" : item.mine < item.theirs ? "#FF7A7A" : "#E0B84A";
+        c.font = "800 24px Inter, Arial, sans-serif";
+        c.fillText(`${item.mine}-${item.theirs}${item.pens}`, x + colWidth - 30, y);
+    });
+
+    // Alt bilgi
+    const brand = new Image();
+    brand.src = "./img/favicon.png";
+    try {
+        await brand.decode();
+        c.drawImage(brand, 84, 952, 116, 116);
+    } catch (error) {
+        c.textAlign = "left";
+        c.font = "800 30px Inter, Arial, sans-serif";
+        c.fillStyle = "#6AD04A";
+        c.fillText("RotaScore", 90, 1010);
+    }
+    c.font = "600 26px Inter, Arial, sans-serif";
+    c.fillStyle = "rgba(255, 255, 255, 0.6)";
+    c.textAlign = "right";
+    c.fillText("cemeren.dev/rotascore", size - 90, 1010);
+    return new Promise(resolve => card.toBlob(resolve, "image/png"));
+}
+
+function cupFileName() {
+    return `rotascore-${tournament.competition}-${tournament.team}.png`.replace(/[^a-z0-9.-]/gi, "");
+}
+
+async function shareTournament() {
+    if (!tournament) return;
+    const blob = await buildTournamentCard(tournament);
+    try {
+        await navigator.share({ files: [new File([blob], cupFileName(), { type: "image/png" })] });
+    } catch (error) {
+        // iptal
+    }
+}
+
+async function downloadTournament() {
+    if (!tournament) return;
+    const blob = await buildTournamentCard(tournament);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = cupFileName();
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 // ---------- Olaylar ----------
+
+$("cup-share-btn").addEventListener("click", shareTournament);
+$("cup-download-btn").addEventListener("click", downloadTournament);
 
 for (const option of document.querySelectorAll(".mode-option[data-cup]")) {
     option.addEventListener("click", () => {
