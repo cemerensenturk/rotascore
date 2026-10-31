@@ -97,6 +97,9 @@ function onDataLoaded() {
     $("filter-category").value = selection.category;
     if ($("filter-category").value !== selection.category) selection.category = "all";
     applyCategory(selection.category);
+    loadTournament();
+    renderTournament();
+    renderMode();
     loadToday();
     loadRatings();
 }
@@ -178,7 +181,7 @@ function closeSheet(sheet) {
 
 function openPicker(side) {
     pickerSide = side;
-    $("picker-title").textContent = side === "home" ? "Choose home team" : "Choose away team";
+    $("picker-title").textContent = side === "cup" ? "Choose your club" : side === "home" ? "Choose home team" : "Choose away team";
     $("picker-search").value = "";
     renderPickerList();
     openSheet($("picker"));
@@ -191,10 +194,9 @@ function renderPickerList() {
     const list = $("picker-list");
     list.innerHTML = "";
 
-    // Arama varsa tüm takımlarda, yoksa seçili ligde
-    const ids = query
-        ? sortByName(databaseTeams().filter(id => normalize(teamData(id).name).includes(query)))
-        : sortByName(categoryTeams());
+    // Arama varsa tüm takımlarda, yoksa seçili ligde; turnuva kurulumunda yalnızca o turnuvanın 36 takımı
+    const pool = pickerSide === "cup" ? cupCompetition().teams : (query ? databaseTeams() : categoryTeams());
+    const ids = sortByName(query ? pool.filter(id => normalize(teamData(id).name).includes(query)) : pool);
 
     if (ids.length === 0) {
         list.innerHTML = `<p class="empty">No team found</p>`;
@@ -207,7 +209,7 @@ function renderPickerList() {
         option.type = "button";
         option.className = "team-option";
         option.dataset.id = id;
-        if (id === selection[pickerSide]) option.classList.add("selected");
+        if (id === (pickerSide === "cup" ? cupSetup.team : selection[pickerSide])) option.classList.add("selected");
         option.appendChild(teamBadge(id, "badge-sm"));
 
         const name = document.createElement("span");
@@ -217,7 +219,9 @@ function renderPickerList() {
 
         const tag = document.createElement("span");
         tag.className = "option-tag";
-        if (id === selection[otherSide]) tag.textContent = otherSide === "home" ? "Home" : "Away";
+        const rating = pickerSide === "cup" && selection.mode === "realistic" && teamRating(id);
+        if (pickerSide === "cup") tag.textContent = rating ? `Elo ${rating.elo}` : "";
+        else if (id === selection[otherSide]) tag.textContent = otherSide === "home" ? "Home" : "Away";
         else if (query) tag.textContent = leagueOf(id);
         option.appendChild(tag);
 
@@ -226,6 +230,12 @@ function renderPickerList() {
 }
 
 function pickTeam(id) {
+    if (pickerSide === "cup") {
+        cupSetup.team = id;
+        renderCupSetup();
+        closeSheet($("picker"));
+        return;
+    }
     const otherSide = pickerSide === "home" ? "away" : "home";
     // Diğer taraftaki takım seçildiyse yer değiştir
     if (id === selection[otherSide]) selection[otherSide] = selection[pickerSide];
@@ -272,6 +282,8 @@ function uiMatchStarted() {
     // Mobilde maç sürerken istatistikler sahanın hemen altına çıkar, oynarken kaydırmak gerekmez
     document.body.classList.add("match-live");
     setTicker(`${team1.name} vs ${team2.name}`);
+    renderMode();
+    renderTournament();
     uiClockChanged();
     uiStatsChanged();
 }
@@ -431,6 +443,9 @@ function uiMatchEnded() {
         resultUrl = URL.createObjectURL(resultBlob);
         $("result-card").src = resultUrl;
         $("share-btn").hidden = !canShareFiles();
+        // Turnuva maçıysa sonucu işler ve kartın altına ne olduğunu yazar
+        onTournamentMatchEnded();
+        renderMode();
         // Paneller sonuç kartı açılırken yer değiştirsin, kayma göze çarpmasın
         document.body.classList.remove("match-live");
         openSheet($("result"));
@@ -574,7 +589,7 @@ async function buildResultCard() {
     c.fillText("FULL-TIME", size / 2, 92);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 30px Inter, Arial, sans-serif";
-    const subtitle = (activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : "");
+    const subtitle = tournamentSubtitle() || ((activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : ""));
     c.fillText(subtitle, size / 2, 138);
 
     // Logolar ve skor
@@ -741,7 +756,8 @@ async function loadToday() {
     } catch (error) {
         // yoksay
     }
-    if ((today.matches.length || tomorrow.matches.length) && savedTab !== "teams") showTab("today", false);
+    if (savedTab === "tournament") showTab("tournament", false);
+    else if ((today.matches.length || tomorrow.matches.length) && savedTab !== "teams") showTab("today", false);
 }
 
 // Veritabanımızda olmayan takım: logosuz, nötr renkli bir top olarak oynanır
@@ -846,7 +862,7 @@ function playFixture(match) {
 }
 
 function showTab(name, remember) {
-    for (const tab of ["teams", "today"]) {
+    for (const tab of ["teams", "today", "tournament"]) {
         $(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
         $(`panel-${tab}`).hidden = tab !== name;
     }
@@ -918,14 +934,20 @@ function renderMode() {
     for (const option of document.querySelectorAll(".mode-option[data-mode]")) {
         option.setAttribute("aria-checked", String(option.dataset.mode === selection.mode));
     }
+    // Maç sürerken ve turnuva boyunca mod kilitli (tournament-ui.js sonra yüklenir)
+    const locked = typeof modeLocked === "function" && modeLocked();
+    $("mode-switch").setAttribute("aria-disabled", String(locked));
+    $("mode-switch").title = locked ? "Locked during a match or tournament" : "";
 }
 
 for (const option of document.querySelectorAll(".mode-option[data-mode]")) {
     option.addEventListener("click", () => {
+        if (modeLocked()) return;
         selection.mode = option.dataset.mode;
         saveSelection();
         renderMode();
         renderPickButtons();
+        renderTournament();
     });
 }
 $("mode-info-btn").addEventListener("click", () => openSheet($("mode-info")));

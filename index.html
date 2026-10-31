@@ -14,7 +14,7 @@
     <title>RotaScore by Kafeinal</title>
     <!-- Site Cloudflare arkasında: CSS/JS 7 gün önbellekte kalır.
          Bu dosyalardan biri değişince ?v= değerini güncelle, ziyaretçiler hemen yenisini alır. -->
-    <link rel="stylesheet" href="style.css?v=2026-10-29.3">
+    <link rel="stylesheet" href="style.css?v=2026-10-31.1">
     <link rel="icon" type="image/x-icon" href="./img/favicon.png">
 </head>
 <body>
@@ -54,15 +54,16 @@
             </div>
             <div class="mode-row">
                 <span class="mode-label">Mode</span>
-                <div class="mode-switch" role="radiogroup" aria-label="Game mode">
+                <div class="mode-switch" id="mode-switch" role="radiogroup" aria-label="Game mode">
                     <button type="button" class="mode-option" role="radio" data-mode="classic" aria-checked="true">Classic</button>
                     <button type="button" class="mode-option" role="radio" data-mode="realistic" aria-checked="false">Realistic</button>
                 </div>
                 <button class="icon-btn info-btn" id="mode-info-btn" type="button" aria-label="About game modes">i</button>
             </div>
-            <div class="tabs" role="tablist">
+            <div class="tabs tabs-3" role="tablist">
                 <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Pick teams</button>
                 <button class="tab" id="tab-today" type="button" role="tab" data-tab="today" aria-selected="false">Fixtures <span class="tab-count" id="today-count"></span></button>
+                <button class="tab" id="tab-tournament" type="button" role="tab" data-tab="tournament" aria-selected="false">Tournament</button>
             </div>
 
             <div class="tab-panel" id="panel-teams" role="tabpanel">
@@ -91,6 +92,44 @@
                     <p class="today-date" id="today-date"></p>
                 </div>
                 <div class="today-list" id="today-list"><p class="empty">Loading today's matches…</p></div>
+            </div>
+
+            <!-- Turnuva: UEFA'nın 36 takımlı formatı, kaldığı yerden devam eder (localStorage) -->
+            <div class="tab-panel" id="panel-tournament" role="tabpanel" hidden>
+                <div class="cup-setup" id="tournament-setup">
+                    <div class="mode-switch cup-switch" role="radiogroup" aria-label="Competition">
+                        <button type="button" class="mode-option" role="radio" data-cup="ucl" aria-checked="false">Champions</button>
+                        <button type="button" class="mode-option" role="radio" data-cup="uel" aria-checked="false">Europa</button>
+                        <button type="button" class="mode-option" role="radio" data-cup="uecl" aria-checked="true">Conference</button>
+                    </div>
+                    <button class="team-pick cup-team-pick" id="pick-cup-team" type="button"></button>
+                    <p class="info-note" id="cup-setup-note"></p>
+                    <button class="primary" id="tournament-start" type="button" disabled>Make the draw</button>
+                </div>
+                <div class="cup-live" id="tournament-live" hidden>
+                    <div class="cup-head">
+                        <img class="cup-badge" id="cup-badge" alt="" width="40" height="40">
+                        <div class="pick-text"><small id="cup-name"></small><strong id="cup-team"></strong></div>
+                        <span class="cup-pos" id="cup-pos"></span>
+                    </div>
+                    <p class="cup-stage" id="cup-stage"></p>
+                    <p class="cup-out" id="cup-out" hidden></p>
+                    <div class="cup-next" id="cup-next"></div>
+                    <button class="primary" id="tournament-play" type="button">Play</button>
+                    <details class="today-league" id="cup-table-section" open>
+                        <summary><span>League table</span><span class="today-league-count" id="cup-table-count"></span></summary>
+                        <div class="cup-table" id="cup-table"></div>
+                    </details>
+                    <details class="today-league" id="cup-bracket-section" hidden>
+                        <summary><span>Knock-out stage</span></summary>
+                        <div class="cup-bracket" id="cup-bracket"></div>
+                    </details>
+                    <details class="today-league" id="cup-path-section">
+                        <summary><span>Your matches</span></summary>
+                        <div class="cup-path" id="cup-path"></div>
+                    </details>
+                    <button class="secondary" id="tournament-quit" type="button">Abandon tournament</button>
+                </div>
             </div>
         </section>
 
@@ -132,6 +171,7 @@
                 <p>Team strength comes from real-world Elo ratings, updated daily. Stronger teams finish better and win more duels, so favourites win more often, tuned to match real-world odds. Upsets still happen.</p>
             </div>
             <p class="info-note">Ratings: clubelo.com (or footballdatabase.com when it is unavailable) for clubs, eloratings.net for national teams.</p>
+            <p class="info-note">The mode is locked while a match is being played and for the whole of a tournament.</p>
         </div>
     </div>
 
@@ -156,6 +196,7 @@
         <div class="sheet-backdrop" data-close></div>
         <div class="sheet-panel result-panel" role="dialog" aria-modal="true" aria-label="Full-time result">
             <img class="result-card" id="result-card" alt="Match result card">
+            <p class="result-note" id="result-note" hidden></p>
             <div class="result-actions">
                 <button class="primary" id="share-btn" type="button">Share</button>
                 <button class="secondary" id="download-btn" type="button">Download</button>
@@ -174,7 +215,9 @@
     </div>
     <script src="sound.js?v=2026-10-20.3"></script>
     <script src="xg-table.js?v=2026-10-28.2"></script>
-    <script src="script.js?v=2026-10-28.5"></script>
-    <script src="ui.js?v=2026-10-29.2"></script>
+    <script src="script.js?v=2026-10-31.1"></script>
+    <script src="tournament.js?v=2026-10-31.1"></script>
+    <script src="ui.js?v=2026-10-31.1"></script>
+    <script src="tournament-ui.js?v=2026-10-31.1"></script>
 </body>
 </html>
