@@ -512,23 +512,49 @@ select optgroup {
 
 /* ---------- Sekmeler ve günün maçları ---------- */
 
+/* Oyun modları: sığmayınca yana kayar, kaydırma çubuğu gizli */
 .tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 4px;
     padding: 4px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.06);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tabs.more-right {
+    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+    mask-image: linear-gradient(to right, #000 88%, transparent);
+}
+
+.tabs.more-left {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%);
+    mask-image: linear-gradient(to right, transparent, #000 12%);
+}
+
+.tabs.more-left.more-right {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
 }
 
 .tab {
+    flex: 1 0 auto;
     border: none;
     border-radius: 9px;
-    padding: 9px 8px;
+    padding: 9px 14px;
     background: none;
     color: var(--muted);
     font-weight: 800;
     font-size: 14px;
+    white-space: nowrap;
+    scroll-snap-align: start;
 }
 
 .tab[aria-selected="true"] {
@@ -737,10 +763,6 @@ select optgroup {
 .badge-md { width: 52px; height: 52px; font-size: 14px; }
 
 /* ---------- Turnuva ---------- */
-
-.tabs-3 {
-    grid-template-columns: 1fr 1fr 1fr;
-}
 
 .mode-switch[aria-disabled="true"] {
     opacity: 0.55;
@@ -1005,6 +1027,83 @@ select optgroup {
     font-size: 11px;
     color: var(--muted);
     text-align: left;
+}
+
+/* Lig: haftalık fikstür */
+.week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 0 8px;
+}
+
+.week-nav .icon-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.week-nav .icon-btn:disabled {
+    opacity: 0.3;
+}
+
+.week-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.week-match {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+}
+
+.week-match:last-child {
+    border-bottom: none;
+}
+
+.week-match.me {
+    background: rgba(106, 208, 74, 0.12);
+    border-radius: 8px;
+    font-weight: 800;
+}
+
+.week-side {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.week-side.away {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.week-score {
+    min-width: 44px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    text-align: center;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.week-score.pending {
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
 }
 
 /* Kullanıcının yolu */

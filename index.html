@@ -14,7 +14,7 @@
     <title>RotaScore by Kafeinal</title>
     <!-- Site Cloudflare arkasında: CSS/JS 7 gün önbellekte kalır.
          Bu dosyalardan biri değişince ?v= değerini güncelle, ziyaretçiler hemen yenisini alır. -->
-    <link rel="stylesheet" href="style.css?v=2026-11-01.2">
+    <link rel="stylesheet" href="style.css?v=2026-11-03.1">
     <link rel="icon" type="image/x-icon" href="./img/favicon.png">
 </head>
 <body>
@@ -60,10 +60,13 @@
                 </div>
                 <button class="icon-btn info-btn" id="mode-info-btn" type="button" aria-label="About game modes">i</button>
             </div>
-            <div class="tabs tabs-3" role="tablist">
+            <!-- Oyun modları: sığmayınca yana kayar -->
+            <div class="tabs" role="tablist">
                 <button class="tab" id="tab-teams" type="button" role="tab" data-tab="teams" aria-selected="true">Friendly</button>
                 <button class="tab" id="tab-today" type="button" role="tab" data-tab="today" aria-selected="false">Fixtures <span class="tab-count" id="today-count"></span></button>
                 <button class="tab" id="tab-tournament" type="button" role="tab" data-tab="tournament" aria-selected="false">Tournament</button>
+                <button class="tab" id="tab-league" type="button" role="tab" data-tab="league" aria-selected="false">League</button>
+                <button class="tab" id="tab-pens" type="button" role="tab" data-tab="pens" aria-selected="false">Penalties</button>
             </div>
 
             <div class="tab-panel" id="panel-teams" role="tabpanel">
@@ -135,6 +138,58 @@
                     </details>
                     <button class="secondary" id="tournament-quit" type="button">Abandon tournament</button>
                 </div>
+            </div>
+
+            <!-- Lig sezonu: tek devre, hafta hafta; kaldığı yerden devam eder (localStorage) -->
+            <div class="tab-panel" id="panel-league" role="tabpanel" hidden>
+                <div class="cup-setup" id="league-setup">
+                    <label class="field">
+                        <span>League</span>
+                        <select id="league-select"></select>
+                    </label>
+                    <button class="team-pick cup-team-pick" id="pick-league-team" type="button"></button>
+                    <p class="info-note" id="league-setup-note"></p>
+                    <button class="primary" id="league-start" type="button" disabled>Build the fixtures</button>
+                </div>
+                <div class="cup-live" id="league-live" hidden>
+                    <div class="cup-head">
+                        <img class="cup-badge" id="league-badge" alt="" width="40" height="40">
+                        <div class="pick-text"><small id="league-name"></small><strong id="league-team"></strong></div>
+                        <span class="cup-pos" id="league-pos"></span>
+                    </div>
+                    <p class="cup-stage" id="league-stage"></p>
+                    <div class="cup-next" id="league-next"></div>
+                    <button class="primary" id="league-play" type="button">Play</button>
+                    <div class="result-actions" id="league-share-row" hidden>
+                        <button class="secondary" id="league-share-btn" type="button">Share my season</button>
+                        <button class="secondary" id="league-download-btn" type="button">Download</button>
+                    </div>
+                    <details class="today-league" id="league-fixtures-section" open>
+                        <summary><span>Fixtures</span></summary>
+                        <div class="week-nav">
+                            <button class="icon-btn" id="league-week-prev" type="button" aria-label="Previous week">‹</button>
+                            <span class="week-label" id="league-week-label"></span>
+                            <button class="icon-btn" id="league-week-next" type="button" aria-label="Next week">›</button>
+                        </div>
+                        <div class="week-list" id="league-week"></div>
+                    </details>
+                    <details class="today-league" id="league-table-section">
+                        <summary><span>Table</span><span class="today-league-count" id="league-table-count"></span></summary>
+                        <div class="cup-table" id="league-table"></div>
+                    </details>
+                    <button class="secondary" id="league-quit" type="button">Abandon season</button>
+                </div>
+            </div>
+
+            <!-- Penaltı modu: iki takım, doğrudan seri -->
+            <div class="tab-panel" id="panel-pens" role="tabpanel" hidden>
+                <div class="matchup">
+                    <button class="team-pick" id="pens-home" type="button" data-side="home"></button>
+                    <span class="vs">vs</span>
+                    <button class="team-pick" id="pens-away" type="button" data-side="away"></button>
+                </div>
+                <p class="info-note">Straight to the spot: five kicks each, then sudden death. Same teams as the Friendly tab.</p>
+                <button class="primary" id="pens-start-btn" type="button">Start shoot-out</button>
             </div>
         </section>
 
@@ -220,9 +275,11 @@
     </div>
     <script src="sound.js?v=2026-10-20.3"></script>
     <script src="xg-table.js?v=2026-10-28.2"></script>
-    <script src="script.js?v=2026-11-01.1"></script>
+    <script src="script.js?v=2026-11-03.1"></script>
     <script src="tournament.js?v=2026-11-01.1"></script>
-    <script src="ui.js?v=2026-11-01.1"></script>
-    <script src="tournament-ui.js?v=2026-11-01.2"></script>
+    <script src="league.js?v=2026-11-03.1"></script>
+    <script src="ui.js?v=2026-11-03.1"></script>
+    <script src="tournament-ui.js?v=2026-11-03.1"></script>
+    <script src="league-ui.js?v=2026-11-03.1"></script>
 </body>
 </html>

@@ -99,6 +99,8 @@ function onDataLoaded() {
     applyCategory(selection.category);
     loadTournament();
     renderTournament();
+    loadLeague();
+    renderLeague();
     renderMode();
     loadToday();
     loadRatings();
@@ -138,8 +140,8 @@ function applyCategory(categoryId) {
 }
 
 function renderPickButtons() {
-    for (const side of ["home", "away"]) {
-        const button = $(`pick-${side}`);
+    for (const [side, prefix] of [["home", "pick"], ["away", "pick"], ["home", "pens"], ["away", "pens"]]) {
+        const button = $(`${prefix}-${side}`);
         const id = selection[side];
         button.innerHTML = "";
         if (!id) continue;
@@ -181,7 +183,7 @@ function closeSheet(sheet) {
 
 function openPicker(side) {
     pickerSide = side;
-    $("picker-title").textContent = side === "cup" ? "Choose your club" : side === "home" ? "Choose home team" : "Choose away team";
+    $("picker-title").textContent = side === "cup" || side === "league" ? "Choose your club" : side === "home" ? "Choose home team" : "Choose away team";
     $("picker-search").value = "";
     renderPickerList();
     openSheet($("picker"));
@@ -195,7 +197,7 @@ function renderPickerList() {
     list.innerHTML = "";
 
     // Arama varsa tüm takımlarda, yoksa seçili ligde; turnuva kurulumunda yalnızca o turnuvanın 36 takımı
-    const pool = pickerSide === "cup" ? cupCompetition().teams : (query ? databaseTeams() : categoryTeams());
+    const pool = pickerSide === "cup" ? cupCompetition().teams : pickerSide === "league" ? leagueCompetition().teams : (query ? databaseTeams() : categoryTeams());
     const ids = sortByName(query ? pool.filter(id => normalize(teamData(id).name).includes(query)) : pool);
 
     if (ids.length === 0) {
@@ -209,7 +211,8 @@ function renderPickerList() {
         option.type = "button";
         option.className = "team-option";
         option.dataset.id = id;
-        if (id === (pickerSide === "cup" ? cupSetup.team : selection[pickerSide])) option.classList.add("selected");
+        const chosen = pickerSide === "cup" ? cupSetup.team : pickerSide === "league" ? leagueSetup.team : selection[pickerSide];
+        if (id === chosen) option.classList.add("selected");
         option.appendChild(teamBadge(id, "badge-sm"));
 
         const name = document.createElement("span");
@@ -219,8 +222,8 @@ function renderPickerList() {
 
         const tag = document.createElement("span");
         tag.className = "option-tag";
-        const rating = pickerSide === "cup" && selection.mode === "realistic" && teamRating(id);
-        if (pickerSide === "cup") tag.textContent = rating ? `Elo ${rating.elo}` : "";
+        const rating = (pickerSide === "cup" || pickerSide === "league") && selection.mode === "realistic" && teamRating(id);
+        if (pickerSide === "cup" || pickerSide === "league") tag.textContent = rating ? `Elo ${rating.elo}` : "";
         else if (id === selection[otherSide]) tag.textContent = otherSide === "home" ? "Home" : "Away";
         else if (query) tag.textContent = leagueOf(id);
         option.appendChild(tag);
@@ -236,6 +239,12 @@ function pickTeam(id) {
         closeSheet($("picker"));
         return;
     }
+    if (pickerSide === "league") {
+        leagueSetup.team = id;
+        renderLeagueSetup();
+        closeSheet($("picker"));
+        return;
+    }
     const otherSide = pickerSide === "home" ? "away" : "home";
     // Diğer taraftaki takım seçildiyse yer değiştir
     if (id === selection[otherSide]) selection[otherSide] = selection[pickerSide];
@@ -247,13 +256,16 @@ function pickTeam(id) {
 
 // ---------- Maç başlıyor ----------
 
-function kickOff(competition) {
+let lastKickoff = { competition: null, options: null }; // Rematch aynı türde (maç / penaltı) başlasın
+
+function kickOff(competition, options) {
     if (!selection.home || !selection.away) return;
     if (gameState !== "idle" && gameState !== "ended") return;
     activeCompetition = competition && competition.id ? competition : currentCompetition();
+    lastKickoff = { competition: activeCompetition, options: options || null };
     Sound.unlock();
     closeSheet($("result"));
-    startGame(selection.home, selection.away, selection.mode);
+    startGame(selection.home, selection.away, selection.mode, options);
 
     // Mobilde saha görünmüyorsa sahaya kaydır
     const stage = $("stage").getBoundingClientRect();
@@ -278,6 +290,9 @@ function uiMatchStarted() {
     $("timeline").innerHTML = "";
     $("kickoff-btn").disabled = true;
     $("kickoff-btn").textContent = "Live";
+    $("pens-start-btn").disabled = true;
+    $("pens-start-btn").textContent = "Live";
+    $("stats").hidden = shootoutOnly; // penaltı modunda istatistik yok, sadece atışlar
     $("match-stats").classList.add("has-match");
     // Mobilde maç sürerken istatistikler sahanın hemen altına çıkar, oynarken kaydırmak gerekmez
     document.body.classList.add("match-live");
@@ -321,9 +336,11 @@ function eventText(event) {
         case "added": return `${event.added} minute${event.added > 1 ? "s" : ""} added`;
         case "kickoff": return `Kick-off: ${team1.name} vs ${team2.name}${modeText()}${keeperFormText(event.keeperForm)}`;
         case "halftime": return `Half-time: ${score[0]} - ${score[1]}`;
-        case "shootout": return "Level on aggregate · penalty shoot-out";
+        case "shootout": return shootoutOnly ? "Penalty shoot-out" : "Level on aggregate · penalty shoot-out";
         case "penalty": return `${team.name} ${event.scored ? "score" : event.result === "save" ? "saved by the keeper" : event.result === "post" ? "hit the post" : "miss"} · ${event.tally}`;
-        case "fulltime": return `Full-time: ${team1.name} ${score[0]} - ${score[1]} ${team2.name}${shootoutResult
+        case "fulltime": return shootoutOnly && shootoutResult
+            ? `${shootoutResult[0] > shootoutResult[1] ? team1.name : team2.name} win the shoot-out ${Math.max(...shootoutResult)}-${Math.min(...shootoutResult)}`
+            : `Full-time: ${team1.name} ${score[0]} - ${score[1]} ${team2.name}${shootoutResult
             ? ` · ${shootoutResult[0] > shootoutResult[1] ? team1.name : team2.name} win ${Math.max(...shootoutResult)}-${Math.min(...shootoutResult)} on penalties` : ""}`;
         default: return "";
     }
@@ -356,6 +373,12 @@ function setTicker(text) {
 
 function uiEvent(event) {
     if (silent) return; // sessiz simülasyon ekrana dokunmaz
+    if (event.type === "penalty" && shootoutOnly) {
+        // Penaltı modunda skor tabelası seriyi gösterir
+        const tally = shootoutTally();
+        $("sb-home-score").textContent = tally[0];
+        $("sb-away-score").textContent = tally[1];
+    }
     const text = eventText(event);
     setTicker(`${event.minute} ${text}`);
     uiClockChanged();
@@ -438,6 +461,8 @@ function uiMatchEnded() {
     if (silent) return; // sessiz simülasyon ekrana dokunmaz
     $("kickoff-btn").disabled = false;
     $("kickoff-btn").textContent = "Kick off";
+    $("pens-start-btn").disabled = false;
+    $("pens-start-btn").textContent = "Start shoot-out";
     // Son düdükten sonra kısa bir an bekle, sonra kartı göster
     setTimeout(async () => {
         if (gameState !== "ended") return;
@@ -446,8 +471,8 @@ function uiMatchEnded() {
         resultUrl = URL.createObjectURL(resultBlob);
         $("result-card").src = resultUrl;
         $("share-btn").hidden = !canShareFiles();
-        // Turnuva maçıysa sonucu işler ve kartın altına ne olduğunu yazar
-        onTournamentMatchEnded();
+        // Lig ya da turnuva maçıysa sonucu işler ve kartın altına ne olduğunu yazar
+        if (!onLeagueMatchEnded()) onTournamentMatchEnded();
         renderMode();
         // Paneller sonuç kartı açılırken yer değiştirsin, kayma göze çarpmasın
         document.body.classList.remove("match-live");
@@ -589,10 +614,10 @@ async function buildResultCard() {
     // Başlık
     c.fillStyle = "#6AD04A";
     c.font = "800 34px Inter, Arial, sans-serif";
-    c.fillText(shootoutResult ? `FULL-TIME · PENS ${shootoutResult[0]}-${shootoutResult[1]}` : "FULL-TIME", size / 2, 92);
+    c.fillText(shootoutOnly ? "PENALTY SHOOT-OUT" : shootoutResult ? `FULL-TIME · PENS ${shootoutResult[0]}-${shootoutResult[1]}` : "FULL-TIME", size / 2, 92);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 30px Inter, Arial, sans-serif";
-    const subtitle = tournamentSubtitle() || ((activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : ""));
+    const subtitle = leagueSubtitle() || tournamentSubtitle() || ((activeCompetition ? activeCompetition.name : "Friendly") + (matchMode === "realistic" ? " · Realistic" : ""));
     c.fillText(subtitle, size / 2, 138);
 
     // Logolar ve skor
@@ -600,7 +625,8 @@ async function buildResultCard() {
     await drawCardBadge(c, team2, size - 250, 320, 118);
     c.fillStyle = "#FFFFFF";
     c.font = "800 140px Inter, Arial, sans-serif";
-    c.fillText(`${score[0]}-${score[1]}`, size / 2, 328);
+    const bigScore = shootoutOnly && shootoutResult ? shootoutResult : score;
+    c.fillText(`${bigScore[0]}-${bigScore[1]}`, size / 2, 328);
 
     // Takım adları
     for (const [team, x] of [[team1, 250], [team2, size - 250]]) {
@@ -609,6 +635,32 @@ async function buildResultCard() {
         c.fillText(team.name, x, 482);
     }
 
+    if (shootoutOnly && shootout) {
+        // Penaltı modu: dakikalar yerine atışlar (yeşil gol, kırmızı kaçan), istatistik bloğu yerine özet
+        for (const [index, x] of [[0, 250], [1, size - 250]]) {
+            const kicks = shootout.kicks[index];
+            const dot = 34;
+            const startX = x - ((kicks.length - 1) * dot) / 2;
+            kicks.forEach((scored, i) => {
+                c.beginPath();
+                c.arc(startX + i * dot, 536, 11, 0, Math.PI * 2);
+                c.fillStyle = scored ? "#6AD04A" : "#E05C5C";
+                c.fill();
+            });
+        }
+        const winner = shootoutResult[0] > shootoutResult[1] ? team1 : team2;
+        c.fillStyle = "#6AD04A";
+        c.font = "800 44px Inter, Arial, sans-serif";
+        c.fillText(`${winner.name} win on penalties`, size / 2, 700);
+        c.fillStyle = "rgba(255, 255, 255, 0.6)";
+        c.font = "600 26px Inter, Arial, sans-serif";
+        c.fillText(`${shootout.kicks[0].length + shootout.kicks[1].length} kicks taken${matchMode === "realistic" ? " · Realistic" : ""}`, size / 2, 752);
+    } else drawCardGoalsAndStats(c, size);
+
+    return finishCard(c, card, size);
+}
+
+async function drawCardGoalsAndStats(c, size) {
     // Golleri atanlar (dakikalar)
     for (const [index, x] of [[0, 250], [1, size - 250]]) {
         const minutes = matchGoals.filter(g => g.team === index).map(g => g.minute);
@@ -621,8 +673,10 @@ async function buildResultCard() {
 
     // İstatistikler: sitedeki "Match stats" paneli gibi, takım renklerinde çubuklarla
     drawCardStats(c, 90, 596, size - 180);
+}
 
-    // Alt bilgi: RotaScore logosu ve site adresi
+// Alt bilgi: RotaScore logosu ve site adresi
+async function finishCard(c, card, size) {
     const brand = new Image();
     brand.src = "./img/favicon.png";
     try {
@@ -759,7 +813,7 @@ async function loadToday() {
     } catch (error) {
         // yoksay
     }
-    if (savedTab === "tournament") showTab("tournament", false);
+    if (savedTab === "tournament" || savedTab === "league" || savedTab === "pens") showTab(savedTab, false);
     else if ((today.matches.length || tomorrow.matches.length) && savedTab !== "teams") showTab("today", false);
 }
 
@@ -865,10 +919,13 @@ function playFixture(match) {
 }
 
 function showTab(name, remember) {
-    for (const tab of ["teams", "today", "tournament"]) {
+    for (const tab of ["teams", "today", "tournament", "league", "pens"]) {
         $(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
         $(`panel-${tab}`).hidden = tab !== name;
     }
+    // Sekme şeridi kayıyorsa seçilen sekme görünür olsun
+    $(`tab-${name}`).scrollIntoView({ inline: "nearest", block: "nearest" });
+    updateTabFade();
     if (remember) {
         try {
             localStorage.setItem("rotascore-tab", name);
@@ -877,6 +934,16 @@ function showTab(name, remember) {
         }
     }
 }
+
+// Sekme şeridinin kayan kenarlarında solma: o yönde devamı var demek
+function updateTabFade() {
+    const tabs = document.querySelector(".tabs");
+    tabs.classList.toggle("more-left", tabs.scrollLeft > 2);
+    tabs.classList.toggle("more-right", tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 2);
+}
+document.querySelector(".tabs").addEventListener("scroll", updateTabFade, { passive: true });
+window.addEventListener("resize", updateTabFade);
+updateTabFade();
 
 // ---------- Olay dinleyicileri ----------
 
@@ -893,7 +960,11 @@ $("filter-category").addEventListener("change", event => applyCategory(event.tar
 $("pick-home").addEventListener("click", () => openPicker("home"));
 $("pick-away").addEventListener("click", () => openPicker("away"));
 $("kickoff-btn").addEventListener("click", () => kickOff());
-$("rematch-btn").addEventListener("click", () => kickOff(activeCompetition));
+$("rematch-btn").addEventListener("click", () => kickOff(lastKickoff.competition, lastKickoff.options));
+$("pens-start-btn").addEventListener("click", () => kickOff(null, { shootoutOnly: true }));
+$("pens-home").addEventListener("click", () => openPicker("home"));
+$("pens-away").addEventListener("click", () => openPicker("away"));
+$("tab-pens").addEventListener("click", () => showTab("pens", true));
 $("share-btn").addEventListener("click", shareResult);
 $("download-btn").addEventListener("click", downloadResult);
 

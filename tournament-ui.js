@@ -45,9 +45,10 @@ function tournamentActive() {
     return !!tournament && tournament.stage !== "done";
 }
 
-// Mod, maç sürerken ve turnuva boyunca değiştirilemez
+// Mod, maç sürerken, turnuva ve lig sezonu boyunca değiştirilemez (league-ui.js sonra yüklenir)
 function modeLocked() {
-    return tournamentActive() || (gameState !== "idle" && gameState !== "ended");
+    const season = typeof leagueActive === "function" && leagueActive();
+    return tournamentActive() || season || (gameState !== "idle" && gameState !== "ended");
 }
 
 function ordinal(n) {
@@ -439,7 +440,7 @@ function shootoutNeeded() {
 // turnuva sürerken oynanan hazırlık maçında lig adının yanına "Friendly" (turnuva maçıyla karışmasın)
 function tournamentSubtitle() {
     if (tournamentMatch) return `${cupCompetition().name} · ${tournamentMatch.label}`;
-    if (tournamentActive() && activeCompetition) return `${activeCompetition.name} · Friendly${matchMode === "realistic" ? " · Realistic" : ""}`;
+    if ((tournamentActive() || leagueActive()) && activeCompetition) return `${activeCompetition.name} · Friendly${matchMode === "realistic" ? " · Realistic" : ""}`;
     return null;
 }
 
@@ -448,8 +449,8 @@ function onTournamentMatchEnded() {
     const note = $("result-note");
     $("rematch-btn").hidden = !!tournamentMatch;
     if (!tournamentMatch || !tournament) {
-        const friendly = tournamentActive();
-        note.textContent = friendly ? "Friendly · your tournament is not affected" : "";
+        const friendly = tournamentActive() || leagueActive();
+        note.textContent = friendly ? `Friendly · your ${leagueActive() ? "season" : "tournament"} is not affected` : "";
         note.classList.toggle("muted", friendly);
         note.hidden = !friendly;
         return;
@@ -527,7 +528,8 @@ function cupPathItems(t) {
     });
 }
 
-async function buildTournamentCard(t) {
+// Turnuva ve lig için ortak özet kartı: takım, başlık, özet satırı ve oynanan maçlar
+async function buildRunCard({ title, subtitle, teamId, headline, gold, line, items }) {
     const size = 1080;
     const card = document.createElement("canvas");
     card.width = size;
@@ -538,8 +540,7 @@ async function buildTournamentCard(t) {
     } catch (error) {
         // Arial ile devam
     }
-    const cup = cupCompetition();
-    const colors = teamData(t.team).colors;
+    const colors = teamData(teamId).colors;
 
     const bg = c.createLinearGradient(0, 0, 0, size);
     bg.addColorStop(0, "#0b1220");
@@ -556,36 +557,29 @@ async function buildTournamentCard(t) {
     c.textAlign = "center";
     c.textBaseline = "middle";
 
-    // Başlık: turnuva adı ve mod
     c.fillStyle = "#6AD04A";
     c.font = "800 34px Inter, Arial, sans-serif";
-    c.fillText(cup.name.replace("UEFA ", "").toUpperCase(), size / 2, 84);
+    c.fillText(title, size / 2, 84);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 28px Inter, Arial, sans-serif";
-    c.fillText(`${t.mode === "realistic" ? "Realistic" : "Classic"} mode${t.champion ? ` · Champions: ${teamData(t.champion).name}` : ""}`, size / 2, 128);
+    c.fillText(subtitle, size / 2, 128);
 
-    // Takım
-    await drawCardBadge(c, { id: t.team, isFlag: false }, size / 2, 300, 120);
+    await drawCardBadge(c, { id: teamId, isFlag: false }, size / 2, 300, 120);
     c.fillStyle = "#FFFFFF";
-    fitFont(c, teamData(t.team).name, 800, 56, 800);
-    c.fillText(teamData(t.team).name, size / 2, 468);
+    fitFont(c, teamData(teamId).name, 800, 56, 800);
+    c.fillText(teamData(teamId).name, size / 2, 468);
 
-    // Sonuç
-    const headline = cupHeadline(t);
-    c.fillStyle = t.champion === t.team ? "#FFD84A" : "#6AD04A";
+    c.fillStyle = gold ? "#FFD84A" : "#6AD04A";
     fitFont(c, headline, 900, 72, 800);
     c.fillText(headline, size / 2, 548);
-    const table = standings(t).find(row => row.id === t.team);
     c.fillStyle = "rgba(255, 255, 255, 0.7)";
     c.font = "600 28px Inter, Arial, sans-serif";
-    c.fillText(`League phase ${ordinal(leaguePosition(t, t.team))} · ${table.won}W ${table.drawn}D ${table.lost}L · ${table.gf}-${table.ga}`, size / 2, 604);
+    c.fillText(line, size / 2, 604);
 
-    // Yol: tek ya da iki sütun
-    const items = cupPathItems(t);
+    // Maçlar: 8'den fazlaysa iki sütun; en uzun yol (17-19 maç) alt bilgiye taşmasın diye aralık daralır
     const columns = items.length > 8 ? 2 : 1;
     const perColumn = Math.ceil(items.length / columns);
     const colWidth = (size - 180) / columns;
-    // En uzun yol 17 maç (play-off'tan finale): satırlar alt bilgiye taşmasın diye aralık daralır
     const rowHeight = Math.min(36, Math.floor(256 / Math.max(1, perColumn - 1)));
     items.forEach((item, i) => {
         const col = Math.floor(i / perColumn);
@@ -597,8 +591,6 @@ async function buildTournamentCard(t) {
         c.fillText(item.label, x, y);
         c.fillStyle = "#FFFFFF";
         const nameSize = columns === 2 ? 22 : 24;
-        c.font = `600 ${nameSize}px Inter, Arial, sans-serif`;
-        // Skor sağda (penaltılıysa daha geniş), isim kalan yere sığmazsa kırpılır
         const scoreText = `${item.mine}-${item.theirs}${item.pens}`;
         c.font = `800 ${nameSize}px Inter, Arial, sans-serif`;
         const scoreWidth = c.measureText(scoreText).width;
@@ -613,7 +605,6 @@ async function buildTournamentCard(t) {
         c.fillText(scoreText, x + colWidth - 30, y);
     });
 
-    // Alt bilgi
     const brand = new Image();
     brand.src = "./img/favicon.png";
     try {
@@ -630,6 +621,19 @@ async function buildTournamentCard(t) {
     c.textAlign = "right";
     c.fillText("cemeren.dev/rotascore", size - 90, 1010);
     return new Promise(resolve => card.toBlob(resolve, "image/png"));
+}
+
+async function buildTournamentCard(t) {
+    const table = standings(t).find(row => row.id === t.team);
+    return buildRunCard({
+        title: cupCompetition().name.replace("UEFA ", "").toUpperCase(),
+        subtitle: `${t.mode === "realistic" ? "Realistic" : "Classic"} mode${t.champion ? ` · Champions: ${teamData(t.champion).name}` : ""}`,
+        teamId: t.team,
+        headline: cupHeadline(t),
+        gold: t.champion === t.team,
+        line: `League phase ${ordinal(leaguePosition(t, t.team))} · ${table.won}W ${table.drawn}D ${table.lost}L · ${table.gf}-${table.ga}`,
+        items: cupPathItems(t)
+    });
 }
 
 function cupFileName() {

@@ -202,9 +202,12 @@ function setupTeam(team, teamId) {
 
 // ---------- Maç akışı ----------
 
-function startGame(homeId, awayId, mode) {
+let shootoutOnly = false; // Penaltı modu: geri sayımdan sonra maç yerine doğrudan seri
+
+function startGame(homeId, awayId, mode, options) {
     if (gameState !== "idle" && gameState !== "ended") return;
     if (!teamsDatabase[homeId] || !teamsDatabase[awayId]) return;
+    shootoutOnly = !!(options && options.shootoutOnly);
 
     setupTeam(team1, homeId);
     setupTeam(team2, awayId);
@@ -242,6 +245,8 @@ function simulateMatch(homeId, awayId, mode) {
     if (gameState !== "idle" && gameState !== "ended") return null;
     if (!teamsDatabase[homeId] || !teamsDatabase[awayId]) return null;
     silent = true;
+    const keepShootoutOnly = shootoutOnly;
+    shootoutOnly = false;
     try {
         setupTeam(team1, homeId);
         setupTeam(team2, awayId);
@@ -267,6 +272,7 @@ function simulateMatch(homeId, awayId, mode) {
         return { home: homeId, away: awayId, score: [score[0], score[1]], goals: matchGoals.map(g => ({ ...g })), mode: matchMode };
     } finally {
         silent = false;
+        shootoutOnly = keepShootoutOnly;
         gameState = "idle";
     }
 }
@@ -309,7 +315,7 @@ function newStats() {
 }
 
 function clockLabel() {
-    if (gameState === "shootout") return "PENS";
+    if (gameState === "shootout" || (shootoutOnly && gameState === "ended")) return "PENS";
     return clock.extra > 0 ? `${clock.minute}+${clock.extra}'` : `${clock.minute}'`;
 }
 
@@ -1075,9 +1081,13 @@ function step() {
     if (gameState === "countdown") {
         stateTimer -= STEP_MS;
         if (stateTimer <= 0) {
-            gameState = "playing";
-            audio().whistle("start");
-            addEvent("kickoff", null, { keeperForm: keeper.form });
+            if (shootoutOnly) {
+                startShootout();
+            } else {
+                gameState = "playing";
+                audio().whistle("start");
+                addEvent("kickoff", null, { keeperForm: keeper.form });
+            }
         }
     } else if (gameState === "playing") {
         updatePositions();
