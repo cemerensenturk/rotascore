@@ -462,7 +462,7 @@ function resolvePenalty() {
         createGoalExplosion(shooter.x, shooter.y, shooter.color);
         addFloatingText("GOAL!", shooter.x, shooter.y, "#6AD04A");
         setSpeed(shooter, 0.8);
-        audio().goal();
+        audio().tick(3); // seride her gole gol sesi yok, ses sadece sonunda kazanana
     } else if (s.outcome === "save") {
         keeper.pos = Math.max(-limit, Math.min(limit, s.aim));
         keeper.dive = { side: Math.sign(s.aim) || 1, elapsed: 0 };
@@ -543,7 +543,7 @@ function updateShootout() {
                 s.phase = "done";
                 s.timer = PEN_DONE_MS;
                 shootoutResult = shootoutTally();
-                audio().whistle("end");
+                audio().goal(); // kazanan belli: gol sesi ve tezahürat burada
             } else {
                 shooter.x = -1000;
                 shooter.y = -1000;

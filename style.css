@@ -93,6 +93,23 @@ h1, h2 {
     .controls { grid-area: controls; }
     .match-stats { grid-area: stats; }
     .stage { grid-area: stage; position: sticky; top: 24px; }
+
+    /* Masaüstünde fareyle yana kaydırmak zahmetli: sekmeler iki satıra kırılır */
+    .tabs {
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+
+    .tabs.more-left,
+    .tabs.more-right,
+    .tabs.more-left.more-right {
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+
+    .tab {
+        flex: 1 1 auto;
+    }
 }
 
 .panel {
