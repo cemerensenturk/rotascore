@@ -923,7 +923,8 @@ function showTab(name, remember) {
         $(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
         $(`panel-${tab}`).hidden = tab !== name;
     }
-
+    // Şerit kaymışsa seçilen sekme görünür olsun
+    $(`tab-${name}`).scrollIntoView({ inline: "nearest", block: "nearest" });
     if (remember) {
         try {
             localStorage.setItem("rotascore-tab", name);
@@ -932,6 +933,56 @@ function showTab(name, remember) {
         }
     }
 }
+
+// ---------- Sekme şeridi: kendi kaydırma çubuğu ve fareyle sürükleme ----------
+
+const tabStrip = document.querySelector(".tabs");
+
+function updateTabsBar() {
+    const bar = $("tabs-bar");
+    const overflow = tabStrip.scrollWidth - tabStrip.clientWidth;
+    bar.hidden = overflow <= 1;
+    if (bar.hidden) return;
+    const thumb = $("tabs-thumb");
+    const ratio = tabStrip.clientWidth / tabStrip.scrollWidth;
+    thumb.style.width = `${Math.max(12, ratio * 100)}%`;
+    thumb.style.left = `${(tabStrip.scrollLeft / tabStrip.scrollWidth) * 100}%`;
+}
+tabStrip.addEventListener("scroll", updateTabsBar, { passive: true });
+window.addEventListener("resize", updateTabsBar);
+window.addEventListener("load", updateTabsBar);
+updateTabsBar();
+
+// Çubuğa dokununca o noktaya kay
+$("tabs-bar").addEventListener("click", event => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const fraction = (event.clientX - rect.left) / rect.width;
+    tabStrip.scrollTo({ left: fraction * tabStrip.scrollWidth - tabStrip.clientWidth / 2, behavior: "smooth" });
+});
+
+// Webde şeridi fareyle tutup sürükle (dokunmatikte tarayıcı zaten kaydırıyor)
+let tabDrag = null;
+tabStrip.addEventListener("pointerdown", event => {
+    if (event.pointerType !== "mouse") return;
+    tabDrag = { startX: event.clientX, scrollLeft: tabStrip.scrollLeft, moved: false };
+});
+window.addEventListener("pointermove", event => {
+    if (!tabDrag) return;
+    const dx = event.clientX - tabDrag.startX;
+    if (Math.abs(dx) > 4) {
+        tabDrag.moved = true;
+        tabStrip.classList.add("dragging");
+    }
+    tabStrip.scrollLeft = tabDrag.scrollLeft - dx;
+});
+window.addEventListener("pointerup", () => {
+    if (!tabDrag) return;
+    const moved = tabDrag.moved;
+    tabDrag = null;
+    tabStrip.classList.remove("dragging");
+    // Sürükleme bittiğinde tıklama olarak sayılmasın
+    if (moved) tabStrip.addEventListener("click", event => event.stopPropagation(), { capture: true, once: true });
+});
 
 // ---------- Olay dinleyicileri ----------
 

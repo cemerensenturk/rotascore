@@ -513,21 +513,39 @@ select optgroup {
 
 /* ---------- Sekmeler ve günün maçları ---------- */
 
-/* Oyun modları: iki sabit satır. Üstte üç hızlı oyun, altta iki sezon modu; hiçbir ekranda kaymaz. */
+/* Oyun modları: yana kayan şerit. Tarayıcı çubuğu gizli; altında bizim çizdiğimiz ince çubuk her zaman görünür. */
+.tabs-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .tabs {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    display: flex;
     gap: 4px;
     padding: 4px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.06);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    cursor: grab;
+}
+
+.tabs.dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .tab {
-    grid-column: span 2;
+    flex: 1 0 auto;
     border: none;
     border-radius: 9px;
-    padding: 9px 6px;
+    padding: 9px 14px;
     background: none;
     color: var(--muted);
     font-weight: 800;
@@ -535,8 +553,25 @@ select optgroup {
     white-space: nowrap;
 }
 
-.tab-wide {
-    grid-column: span 3;
+.tabs-bar {
+    position: relative;
+    height: 4px;
+    margin: 0 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+}
+
+.tabs-bar[hidden] {
+    display: none;
+}
+
+.tabs-thumb {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.45);
 }
 
 .tab[aria-selected="true"] {
