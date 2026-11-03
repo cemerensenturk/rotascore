@@ -631,7 +631,7 @@ async function buildTournamentCard(t) {
         teamId: t.team,
         headline: cupHeadline(t),
         gold: t.champion === t.team,
-        line: `League phase ${ordinal(leaguePosition(t, t.team))} · ${table.won}W ${table.drawn}D ${table.lost}L · Goals ${table.gf}-${table.ga}`,
+        line: `League phase ${ordinal(leaguePosition(t, t.team))} · ${table.won}W ${table.drawn}D ${table.lost}L`,
         items: cupPathItems(t)
     });
 }

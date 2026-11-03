@@ -94,22 +94,6 @@ h1, h2 {
     .match-stats { grid-area: stats; }
     .stage { grid-area: stage; position: sticky; top: 24px; }
 
-    /* Masaüstünde fareyle yana kaydırmak zahmetli: sekmeler iki satıra kırılır */
-    .tabs {
-        flex-wrap: wrap;
-        overflow: visible;
-    }
-
-    .tabs.more-left,
-    .tabs.more-right,
-    .tabs.more-left.more-right {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
-
-    .tab {
-        flex: 1 1 auto;
-    }
 }
 
 .panel {
@@ -529,49 +513,30 @@ select optgroup {
 
 /* ---------- Sekmeler ve günün maçları ---------- */
 
-/* Oyun modları: sığmayınca yana kayar, kaydırma çubuğu gizli */
+/* Oyun modları: iki sabit satır. Üstte üç hızlı oyun, altta iki sezon modu; hiçbir ekranda kaymaz. */
 .tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
     gap: 4px;
     padding: 4px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.06);
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-}
-
-.tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.tabs.more-right {
-    -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
-    mask-image: linear-gradient(to right, #000 88%, transparent);
-}
-
-.tabs.more-left {
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%);
-    mask-image: linear-gradient(to right, transparent, #000 12%);
-}
-
-.tabs.more-left.more-right {
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
 }
 
 .tab {
-    flex: 1 0 auto;
+    grid-column: span 2;
     border: none;
     border-radius: 9px;
-    padding: 9px 14px;
+    padding: 9px 6px;
     background: none;
     color: var(--muted);
     font-weight: 800;
     font-size: 14px;
     white-space: nowrap;
-    scroll-snap-align: start;
+}
+
+.tab-wide {
+    grid-column: span 3;
 }
 
 .tab[aria-selected="true"] {

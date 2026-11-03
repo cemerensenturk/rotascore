@@ -923,9 +923,7 @@ function showTab(name, remember) {
         $(`tab-${tab}`).setAttribute("aria-selected", String(tab === name));
         $(`panel-${tab}`).hidden = tab !== name;
     }
-    // Sekme şeridi kayıyorsa seçilen sekme görünür olsun
-    $(`tab-${name}`).scrollIntoView({ inline: "nearest", block: "nearest" });
-    updateTabFade();
+
     if (remember) {
         try {
             localStorage.setItem("rotascore-tab", name);
@@ -934,16 +932,6 @@ function showTab(name, remember) {
         }
     }
 }
-
-// Sekme şeridinin kayan kenarlarında solma: o yönde devamı var demek
-function updateTabFade() {
-    const tabs = document.querySelector(".tabs");
-    tabs.classList.toggle("more-left", tabs.scrollLeft > 2);
-    tabs.classList.toggle("more-right", tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 2);
-}
-document.querySelector(".tabs").addEventListener("scroll", updateTabFade, { passive: true });
-window.addEventListener("resize", updateTabFade);
-updateTabFade();
 
 // ---------- Olay dinleyicileri ----------
 

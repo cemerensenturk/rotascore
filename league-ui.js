@@ -353,7 +353,7 @@ async function buildLeagueCard(l) {
         teamId: l.team,
         headline: leagueHeadline(l),
         gold: l.champion === l.team,
-        line: `${row.points} pts · ${row.won}W ${row.drawn}D ${row.lost}L · Goals ${row.gf}-${row.ga}`,
+        line: `${row.points} pts · ${row.won}W ${row.drawn}D ${row.lost}L`,
         items: leaguePathItems(l)
     });
 }
