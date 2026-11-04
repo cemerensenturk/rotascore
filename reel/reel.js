@@ -208,12 +208,33 @@ const reel = {
         $("reel-intro").hidden = true;
     },
 
-    // Bir kare: 60 Hz motorda "steps" adım, sonra çizim
+    // Bir kare: 60 Hz motorda "steps" adım, sonra çizim. İkinci yarı düdüğü olay üretmediği için burada yakalanır.
     frame(steps) {
+        const halfBefore = clock.half;
         for (let i = 0; i < steps; i++) step();
+        if (halfBefore === 1 && clock.half === 2) reelEvents.push({ frame: reelFrameCount, type: "secondhalf", team: null });
         render();
         reelFrameCount++;
         return { state: gameState, ended: reelEnded, score: [score[0], score[1]] };
+    },
+
+    // Kapanış sahnesi: sonuç kartı
+    showResult(competitionName) {
+        const overlay = $("reel-result");
+        $("result-sub").textContent = `${competitionName} · ${matchMode === "realistic" ? "Realistic" : "Classic"} mode`;
+        $("result-score").textContent = `${score[0]}-${score[1]}`;
+        for (const [side, team, index] of [["home", team1, 0], ["away", team2, 1]]) {
+            $(`result-${side}`).textContent = team.name;
+            const holder = $(`result-${side}-badge`);
+            holder.innerHTML = "";
+            holder.appendChild(badge(team.id, "badge-lg"));
+            const minutes = matchGoals.filter(g => g.team === index).map(g => g.minute);
+            $(`result-${side}-goals`).textContent = minutes.length ? `⚽ ${minutes.join("  ")}` : "";
+        }
+        // İstatistikler: ekrandaki panelin kopyası
+        $("result-stats").innerHTML = $("stats").innerHTML;
+        $("result-stats").style.cssText = $("stats").style.cssText;
+        overlay.hidden = false;
     },
 
     summary() {

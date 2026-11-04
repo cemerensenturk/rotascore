@@ -55,6 +55,19 @@
             <span>Play it yourself · cemeren.dev/rotascore</span>
         </footer>
 
+        <!-- Kapanış: sonuç kartı sahnesi (render-reel.mjs maç bitince açar) -->
+        <div class="reel-result" id="reel-result" hidden>
+            <small class="reel-result-title">Full-time</small>
+            <span class="reel-result-sub" id="result-sub"></span>
+            <div class="reel-result-teams">
+                <div class="reel-result-team"><span id="result-home-badge"></span><strong id="result-home"></strong><em id="result-home-goals"></em></div>
+                <div class="reel-result-score" id="result-score">0-0</div>
+                <div class="reel-result-team"><span id="result-away-badge"></span><strong id="result-away"></strong><em id="result-away-goals"></em></div>
+            </div>
+            <div class="stats reel-result-stats" id="result-stats"></div>
+            <p class="reel-result-foot">RotaScore prediction · play it yourself at cemeren.dev/rotascore</p>
+        </div>
+
         <!-- Açılış kartı: maç başlamadan iki saniye -->
         <div class="reel-intro" id="reel-intro">
             <small id="intro-competition"></small>

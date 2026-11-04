@@ -113,7 +113,88 @@ body.reel::before {
     border-radius: 50%;
 }
 
-/* Açılış kartı */
+/* Sonuç kartı sahnesi */
+.reel-result {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 30px;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(11, 18, 32, 0.96), rgba(18, 59, 34, 0.96));
+    text-align: center;
+}
+
+.reel-result[hidden] {
+    display: none;
+}
+
+.reel-result-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.reel-result-sub {
+    margin-top: -10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.reel-result-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.reel-result-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.reel-result-team strong {
+    font-size: 17px;
+}
+
+.reel-result-team em {
+    min-height: 16px;
+    font-size: 12px;
+    font-style: normal;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.reel-result-score {
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.reel-result-stats {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    box-sizing: border-box;
+}
+
+.reel-result-foot {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Açılış kartı
 .reel-intro {
     position: absolute;
     inset: 0;
