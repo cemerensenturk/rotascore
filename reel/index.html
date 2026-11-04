@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Dikey video (Reels) düzeni: tools/render-reel.mjs bu sayfayı başsız Chromium'da kare kare çeker.
+         Sayfa 450x800 CSS piksel, zoom 2.4 ile 1080x1920. Tüm göreli yollar site köküne göre (base). -->
+    <base href="../">
+    <meta name="viewport" content="width=1080">
+    <title>RotaScore reel</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="reel/reel.css">
+</head>
+<body class="reel">
+    <div class="reel-frame">
+        <header class="reel-head">
+            <img class="reel-cup" id="reel-cup" src="img/favicon.png" alt="">
+            <div class="reel-head-text">
+                <small id="reel-competition">UEFA Champions League</small>
+                <strong>RotaScore prediction</strong>
+            </div>
+            <span class="reel-date" id="reel-date"></span>
+        </header>
+
+        <section class="stage" id="stage">
+            <div class="scorebug" id="scorebug">
+                <div class="sb-team sb-home">
+                    <span class="sb-logo" id="sb-home-logo"></span>
+                    <span class="sb-abbr" id="sb-home-abbr">HOME</span>
+                </div>
+                <div class="sb-score">
+                    <span id="sb-home-score">0</span>
+                    <span class="sb-dash">-</span>
+                    <span id="sb-away-score">0</span>
+                </div>
+                <div class="sb-team sb-away">
+                    <span class="sb-abbr" id="sb-away-abbr">AWAY</span>
+                    <span class="sb-logo" id="sb-away-logo"></span>
+                </div>
+                <div class="sb-clock" id="sb-clock"><span class="live-dot"></span><span id="sb-clock-text">0'</span></div>
+            </div>
+            <div class="pitch">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+            <div class="ticker" id="ticker"></div>
+        </section>
+
+        <section class="panel match-stats has-match" id="match-stats">
+            <h2>Match stats</h2>
+            <div class="stats" id="stats"></div>
+            <ol class="timeline" id="timeline"></ol>
+        </section>
+
+        <footer class="reel-foot">
+            <img src="img/brand.webp" alt="RotaScore" width="36" height="36">
+            <span>Play it yourself · cemeren.dev/rotascore</span>
+        </footer>
+
+        <!-- Açılış kartı: maç başlamadan iki saniye -->
+        <div class="reel-intro" id="reel-intro">
+            <small id="intro-competition"></small>
+            <div class="reel-intro-teams">
+                <div class="reel-intro-team"><span class="badge badge-lg" id="intro-home-badge"></span><strong id="intro-home"></strong></div>
+                <span class="reel-intro-vs">vs</span>
+                <div class="reel-intro-team"><span class="badge badge-lg" id="intro-away-badge"></span><strong id="intro-away"></strong></div>
+            </div>
+            <p>How will it go? RotaScore plays it out.</p>
+        </div>
+    </div>
+    <script src="xg-table.js"></script>
+    <script src="script.js"></script>
+    <script src="reel/reel.js"></script>
+</body>
+</html>

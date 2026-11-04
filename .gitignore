@@ -1,1 +1,3 @@
 .DS_Store
+# Üretilen videolar (tools/render-reel.mjs)
+out/

@@ -1,0 +1,179 @@
+/* Reels düzeni: 450x800 CSS piksel, zoom 2.4 => 1080x1920. Bileşen görünümleri style.css'ten gelir. */
+
+html, body.reel {
+    margin: 0;
+    width: 450px;
+    height: 800px;
+    overflow: hidden;
+}
+
+body.reel {
+    zoom: 2.4;
+}
+
+body.reel::before {
+    background-position: center;
+}
+
+.reel-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 450px;
+    height: 800px;
+    padding: 18px 16px 14px;
+    box-sizing: border-box;
+}
+
+.reel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reel-cup {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.reel-head-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+.reel-head-text small {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.reel-head-text strong {
+    font-size: 16px;
+}
+
+.reel-date {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.reel .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.reel .ticker {
+    max-width: none;
+}
+
+.reel .match-stats {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: block;
+}
+
+.reel .timeline {
+    max-height: none;
+    overflow: hidden;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.reel .match-stats h2 {
+    margin-bottom: 6px;
+}
+
+.reel-foot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.reel-foot img {
+    border-radius: 50%;
+}
+
+/* Açılış kartı */
+.reel-intro {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    background: rgba(5, 10, 18, 0.82);
+    text-align: center;
+}
+
+.reel-intro[hidden] {
+    display: none;
+}
+
+.reel-intro small {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.reel-intro-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.reel-intro-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.reel-intro-team strong {
+    font-size: 18px;
+}
+
+.reel-intro-vs {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.badge-lg {
+    width: 110px;
+    height: 110px;
+    font-size: 30px;
+}
+
+.reel-intro p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
