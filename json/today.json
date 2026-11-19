@@ -1,10 +1,47 @@
 {
- "date": "2026-11-18",
- "generatedAt": "2026-11-18T07:34:56.776Z",
+ "date": "2026-11-19",
+ "generatedAt": "2026-11-19T07:30:20.665Z",
  "source": "espn",
  "matches": [],
  "tomorrow": {
-  "date": "2026-11-19",
-  "matches": []
+  "date": "2026-11-20",
+  "matches": [
+   {
+    "competition": "ligue-1",
+    "kickoff": "2026-11-20T19:45:00Z",
+    "home": {
+     "id": "troyes",
+     "name": "Troyes"
+    },
+    "away": {
+     "id": "le-havre",
+     "name": "Le Havre AC"
+    }
+   },
+   {
+    "competition": "bundesliga",
+    "kickoff": "2026-11-20T19:30:00Z",
+    "home": {
+     "id": "bayern-munich",
+     "name": "Bayern Munich"
+    },
+    "away": {
+     "id": "koln",
+     "name": "FC Cologne"
+    }
+   },
+   {
+    "competition": "la-liga",
+    "kickoff": "2026-11-20T20:00:00Z",
+    "home": {
+     "id": "athletic-bilbao",
+     "name": "Athletic Club"
+    },
+    "away": {
+     "id": "espanyol",
+     "name": "Espanyol"
+    }
+   }
+  ]
  }
 }
