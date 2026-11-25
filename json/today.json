@@ -1,226 +1,550 @@
 {
- "date": "2026-11-24",
- "generatedAt": "2026-11-24T09:58:28.435Z",
+ "date": "2026-11-25",
+ "generatedAt": "2026-11-25T08:41:49.264Z",
  "source": "espn",
  "matches": [
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T17:45:00Z",
+   "kickoff": "2026-11-25T17:45:00Z",
    "home": {
-    "id": "bodo-glimt",
-    "name": "Bodo/Glimt"
+    "id": "sabah",
+    "name": "Sabah FK"
    },
    "away": {
-    "id": "lask-linz",
-    "name": "LASK Linz"
+    "id": "barcelona",
+    "name": "Barcelona"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T17:45:00Z",
+   "kickoff": "2026-11-25T17:45:00Z",
    "home": {
-    "id": "galatasaray",
-    "name": "Galatasaray"
+    "id": "slavia-prag",
+    "name": "Slavia Prague"
    },
    "away": {
-    "id": "aston-villa",
-    "name": "Aston Villa"
+    "id": "villarreal",
+    "name": "Villarreal"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "arsenal",
-    "name": "Arsenal"
+    "id": "atletico-madrid",
+    "name": "Atlético Madrid"
    },
    "away": {
-    "id": "borussia-dortmund",
-    "name": "Borussia Dortmund"
+    "id": "viking",
+    "name": "Viking FK"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "como",
-    "name": "Como"
+    "id": "club-brugge",
+    "name": "Club Brugge"
    },
    "away": {
-    "id": "aek-athens",
-    "name": "AEK Athens"
+    "id": "liverpool",
+    "name": "Liverpool"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "feyenoord",
-    "name": "Feyenoord Rotterdam"
+    "id": "inter-milan",
+    "name": "Internazionale"
    },
    "away": {
-    "id": "porto",
-    "name": "FC Porto"
+    "id": "stuttgart",
+    "name": "VfB Stuttgart"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "manchester-city",
-    "name": "Manchester City"
+    "id": "lille",
+    "name": "Lille"
    },
    "away": {
-    "id": "napoli",
-    "name": "Napoli"
+    "id": "bayern-munich",
+    "name": "Bayern Munich"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "rb-leipzig",
-    "name": "RB Leipzig"
+    "id": "paris-saint-germain",
+    "name": "Paris Saint-Germain"
    },
    "away": {
-    "id": "lens",
-    "name": "Lens"
+    "id": "as-roma",
+    "name": "AS Roma"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "real-madrid",
-    "name": "Real Madrid"
+    "id": "shaktar-donetsk",
+    "name": "Shakhtar Donetsk"
    },
    "away": {
-    "id": "psv",
-    "name": "PSV Eindhoven"
+    "id": "fenerbahce",
+    "name": "Fenerbahce"
    }
   },
   {
    "competition": "ucl",
-   "kickoff": "2026-11-24T20:00:00Z",
+   "kickoff": "2026-11-25T20:00:00Z",
    "home": {
-    "id": "slovan-bratislava",
-    "name": "Slovan Bratislava"
+    "id": "sporting-lizbon",
+    "name": "Sporting CP"
    },
    "away": {
-    "id": "real-betis",
-    "name": "Real Betis"
+    "id": "manchester-united",
+    "name": "Manchester United"
    }
   }
  ],
  "tomorrow": {
-  "date": "2026-11-25",
+  "date": "2026-11-26",
   "matches": [
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T17:45:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "sabah",
-     "name": "Sabah FK"
+     "id": "besiktas",
+     "name": "Besiktas"
     },
     "away": {
-     "id": "barcelona",
-     "name": "Barcelona"
+     "id": "hapoel-beer-sheva",
+     "name": "Hapoel Be'er"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T17:45:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "slavia-prag",
-     "name": "Slavia Prague"
+     "id": "celta-vigo",
+     "name": "Celta Vigo"
     },
     "away": {
-     "id": "villarreal",
-     "name": "Villarreal"
+     "id": "bournemouth",
+     "name": "AFC Bournemouth"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "atletico-madrid",
-     "name": "Atlético Madrid"
+     "id": "dinamo-zagreb",
+     "name": "Dinamo Zagreb"
     },
     "away": {
-     "id": "viking",
-     "name": "Viking FK"
+     "id": "bayer-leverkusen",
+     "name": "Bayer Leverkusen"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "club-brugge",
-     "name": "Club Brugge"
+     "id": "marseille",
+     "name": "Marseille"
     },
     "away": {
-     "id": "liverpool",
-     "name": "Liverpool"
+     "id": "levski-sofia",
+     "name": "Levski Sofia"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "inter-milan",
-     "name": "Internazionale"
+     "id": "olympiakos",
+     "name": "Olympiacos"
     },
     "away": {
-     "id": "stuttgart",
-     "name": "VfB Stuttgart"
+     "id": "ac-milan",
+     "name": "AC Milan"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "lille",
-     "name": "Lille"
+     "id": "rb-salzburg",
+     "name": "RB Salzburg"
     },
     "away": {
-     "id": "bayern-munich",
-     "name": "Bayern Munich"
+     "id": "ararat-armenia",
+     "name": "Ararat-Armenia"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "paris-saint-germain",
-     "name": "Paris Saint-Germain"
+     "id": "union-sg",
+     "name": "Union St.-Gilloise"
     },
     "away": {
-     "id": "as-roma",
-     "name": "AS Roma"
+     "id": "lech-poznan",
+     "name": "Lech Poznan"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T17:45:00Z",
     "home": {
-     "id": "shaktar-donetsk",
-     "name": "Shakhtar Donetsk"
+     "id": "viktoria-plzen",
+     "name": "Viktoria Plzen"
     },
     "away": {
-     "id": "fenerbahce",
-     "name": "Fenerbahce"
+     "id": "benfica",
+     "name": "Benfica"
     }
    },
    {
-    "competition": "ucl",
-    "kickoff": "2026-11-25T20:00:00Z",
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
     "home": {
-     "id": "sporting-lizbon",
-     "name": "Sporting CP"
+     "id": "crystal-palace",
+     "name": "Crystal Palace"
     },
     "away": {
-     "id": "manchester-united",
-     "name": "Manchester United"
+     "id": "real-sociedad",
+     "name": "Real Sociedad"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "ferencvaros",
+     "name": "Ferencvaros"
+    },
+    "away": {
+     "id": "celje",
+     "name": "NK Celje"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "juventus",
+     "name": "Juventus"
+    },
+    "away": {
+     "id": "omonya",
+     "name": "Omonia Nicosia"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "olympique-lyonnais",
+     "name": "Lyon"
+    },
+    "away": {
+     "id": "lillestrom",
+     "name": "Lillestrom"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "nec",
+     "name": "NEC Nijmegen"
+    },
+    "away": {
+     "id": "rennes",
+     "name": "Stade Rennais"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "ofi",
+     "name": "OFI Crete"
+    },
+    "away": {
+     "id": "anderlecht",
+     "name": "Anderlecht"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "sparta-prag",
+     "name": "Sparta Prague"
+    },
+    "away": {
+     "id": "az",
+     "name": "AZ Alkmaar"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "sunderland",
+     "name": "Sunderland"
+    },
+    "away": {
+     "id": "jagiellonia-bialystok",
+     "name": "Jagiellonia Bialystok"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "torreense",
+     "name": "Torreense"
+    },
+    "away": {
+     "id": "celtic",
+     "name": "Celtic"
+    }
+   },
+   {
+    "competition": "uel",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "hoffenheim",
+     "name": "TSG Hoffenheim"
+    },
+    "away": {
+     "id": "sturm-graz",
+     "name": "SK Sturm Graz"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T15:30:00Z",
+    "home": {
+     "id": "kairat",
+     "name": "Kairat Almaty"
+    },
+    "away": {
+     "id": "mjallby",
+     "name": "Mjällby AIF"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "ajax",
+     "name": "Ajax Amsterdam"
+    },
+    "away": {
+     "id": "thun",
+     "name": "FC Thun"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "brighton-and-hove-albion",
+     "name": "Brighton & Hove Albion"
+    },
+    "away": {
+     "id": "universitatea-craiova",
+     "name": "CSU Craiova"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "egnatia",
+     "name": "Egnatia"
+    },
+    "away": {
+     "id": "lincoln-red-imps",
+     "name": "Lincoln Red Imps"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "hearts",
+     "name": "Heart of Midlothian"
+    },
+    "away": {
+     "id": "monaco",
+     "name": "AS Monaco"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "iberia-1999",
+     "name": "Iberia 1999"
+    },
+    "away": {
+     "id": "getafe",
+     "name": "Getafe"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "jablonec",
+     "name": "Jablonec"
+    },
+    "away": {
+     "id": "lugano",
+     "name": "FC Lugano"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "kauno-zalgiris",
+     "name": "Kauno Zalgiris"
+    },
+    "away": {
+     "id": "riga-fc",
+     "name": "Riga FC"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "pafos",
+     "name": "Pafos"
+    },
+    "away": {
+     "id": "midtjylland",
+     "name": "FC Midtjylland"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T17:45:00Z",
+    "home": {
+     "id": "brann",
+     "name": "SK Brann"
+    },
+    "away": {
+     "id": "agf",
+     "name": "AGF"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "fk-borac-banja-luka",
+     "name": "Borac Banja Luka"
+    },
+    "away": {
+     "id": "atalanta",
+     "name": "Atalanta"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "braga",
+     "name": "Braga"
+    },
+    "away": {
+     "id": "kups",
+     "name": "KuPS Kuopio"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "cska-sofia",
+     "name": "CSKA Sofia"
+    },
+    "away": {
+     "id": "trabzonspor",
+     "name": "Trabzonspor"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "nordsjaelland",
+     "name": "FC Nordsjælland"
+    },
+    "away": {
+     "id": "panathinaikos",
+     "name": "Panathinaikos"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "hajduk-split",
+     "name": "Hajduk Split"
+    },
+    "away": {
+     "id": "sint-truiden",
+     "name": "Sint-Truidense"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "inter-escaldes",
+     "name": "Inter D'Escaldes"
+    },
+    "away": {
+     "id": "kopenhag",
+     "name": "F.C. København"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "gent",
+     "name": "KAA Gent"
+    },
+    "away": {
+     "id": "crvena-zvezda",
+     "name": "Red Star Belgrade"
+    }
+   },
+   {
+    "competition": "uecl",
+    "kickoff": "2026-11-26T20:00:00Z",
+    "home": {
+     "id": "freiburg",
+     "name": "SC Freiburg"
+    },
+    "away": {
+     "id": "twente",
+     "name": "FC Twente"
     }
    }
   ]
